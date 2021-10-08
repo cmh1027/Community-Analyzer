@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-
+from preprocess import preprocessing
 
 
 
@@ -31,13 +31,13 @@ request_headers_gallery = {
 }
 
 prefix = "https://m.dcinside.com"
-exclude = ["- dc official App", "\t", "\n"]
+exclude = ["- dc official App"]
 ############### For fiddler analysis ###############
 proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
 verify = "FiddlerRoot.pem"
 ####################################################
 
-def getRankGalleryURLs(soup, rank=1): # 1위 ~ rank위까지 긁어옴
+def getRankGalleryURLs(soup, rank=5): # 1위 ~ rank위까지 긁어옴
     urls = []
     hotgalls = soup.find("div", "container")
     res = hotgalls.findAll('a')
@@ -74,11 +74,6 @@ def getArticleContent(article_url):
     else:
         return soup.find("span", "tit").getText(), soup.find("div", "thum-txt").getText() # title, content
 
-def preprocess(content):
-    for e in exclude:
-        content = content.replace(e, "")
-    content = content.strip()
-    return content
 
 if __name__ == "__main__":
     # response = requests.get('https://m.dcinside.com/category/hotgall', headers=request_headers_main, proxies=proxies, verify=verify)
@@ -94,14 +89,15 @@ if __name__ == "__main__":
             corpus = {"name":gallery_name, "content":[]}
             for url in urls:
                 title, content = getArticleContent(url)
-                title = preprocess(title)
-                content = preprocess(content)
+                title = preprocessing(title, exclude=exclude)
+                content = preprocessing(content, exclude=exclude)
                 if(title != ""):
                     corpus['content'].append(title)
                 if(content != ""):
                     corpus['content'].append(content)
             entire_corpus.append(corpus)
         json.dump(corpus, open("../data/dcinside.json", 'w' ))
+        print(entire_corpus)
         
 
     else : 
