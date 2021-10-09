@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from preprocess import preprocessing
-
-
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from utility.preprocess import rawPreprocess
 
 request_headers_main = {
     'Host': 'm.dcinside.com',
@@ -89,16 +89,14 @@ if __name__ == "__main__":
             corpus = {"name":gallery_name, "content":[]}
             for url in urls:
                 title, content = getArticleContent(url)
-                title = preprocessing(title, exclude=exclude)
-                content = preprocessing(content, exclude=exclude)
+                title = rawPreprocess(title, exclude=exclude)
+                content = rawPreprocess(content, exclude=exclude)
                 if(title != ""):
                     corpus['content'].append(title)
                 if(content != ""):
                     corpus['content'].append(content)
             entire_corpus.append(corpus)
-        json.dump(corpus, open("../data/dcinside.json", 'w' ))
-        print(entire_corpus)
-        
+        json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data\dcinside.json"), 'w' ))
 
     else : 
         print(response.status_code)
