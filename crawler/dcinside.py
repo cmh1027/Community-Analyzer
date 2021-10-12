@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import sys, os
+import itertools
+from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.preprocess import rawPreprocess
 
@@ -85,9 +87,9 @@ if __name__ == "__main__":
         articleURLs = []
         entire_corpus = []
         for gallery in galleries:
-            urls, gallery_name = getGalleryArticleURLs(gallery, page=1)
-            corpus = {"name":gallery_name, "content":[]}
-            for url in urls:
+            urls, gallery_name = getGalleryArticleURLs(gallery, page=10)
+            corpus = {"name":"디시/" + gallery_name, "content":[]}
+            for url in tqdm(urls, desc="Processing : " + gallery_name + "..."):
                 title, content = getArticleContent(url)
                 title = rawPreprocess(title, exclude=exclude)
                 content = rawPreprocess(content, exclude=exclude)
