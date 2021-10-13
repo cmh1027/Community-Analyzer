@@ -1,14 +1,32 @@
 import json
 import os
-from utility.preprocess import sentencesTokenize
+from utility.preprocess import sentencesBertTokenize, sentencesOktTokenize, pickOnlyNouns, pickOnlyAdjsVerb
 from gluonnlp.data import SentencepieceTokenizer
 from kobert.utils import get_tokenizer
-tok_path = get_tokenizer()
-sp = SentencepieceTokenizer(tok_path)
-website = "dcinside"
-data = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/" + website + ".json"), 'r'))
-data_processed = []
-for data in data:
-    corpus_embedded = sentencesTokenize(data["content"], sp)
-    data_processed.append({"name":data["name"], "content":corpus_embedded})
-json.dump(data_processed, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/"+ website + "_tokenized.json"), 'w'))
+from konlpy.tag import Okt
+
+if __name__ == "__main__":
+    tok_path = get_tokenizer()
+    sp = SentencepieceTokenizer(tok_path)
+    okt = Okt()
+    website = "dcinside"
+    data = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/" + website + ".json"), 'r'))
+    data_bert_processed = []
+    data_okt_noun_processed = []
+    data_okt_adjv_processed = []
+    ############### BERT Tokenizer ###############
+    for board in data:
+        bert_tokenized = sentencesBertTokenize(board["content"], sp, board["name"])
+        data_bert_processed.append({"name":board["name"], "content":bert_tokenized})
+    ##############################################
+    ############### Okt Tokenizer ###############
+    for board in data:
+        okt_tokenized = sentencesOktTokenize(board["content"], okt, board["name"])
+        okt_noun_tokenized = pickOnlyNouns(okt_tokenized)
+        okt_adjv_tokenized = pickOnlyAdjsVerb(okt_tokenized)
+        data_okt_noun_processed.append({"name":board["name"], "content":okt_noun_tokenized})
+        data_okt_adjv_processed.append({"name":board["name"], "content":okt_adjv_tokenized})
+    ##############################################
+json.dump(data_bert_processed, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/"+ website + "_bert_tokenized.json"), 'w'))
+json.dump(data_okt_noun_processed, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/"+ website + "_okt_noun_tokenized.json"), 'w'))
+json.dump(data_okt_adjv_processed, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/"+ website + "_okt_adjv_tokenized.json"), 'w'))

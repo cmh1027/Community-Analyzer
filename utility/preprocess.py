@@ -1,5 +1,5 @@
 import re
-# from .stopwords import remove_stopwords
+from tqdm import tqdm
 # from kobert.pytorch_kobert import get_pytorch_kobert_model
 
 def rawPreprocess(content, exclude=[]):
@@ -11,12 +11,41 @@ def rawPreprocess(content, exclude=[]):
     content = content.strip()
     return content
 
-def sentencesTokenize(sentences, tokenizer):
+def sentencesBertTokenize(sentences, tokenizer, name=""):
     sentences_tokenized = []
-    for sentence in sentences:
+    for sentence in tqdm(sentences, desc=name+" BERT-tokenizing..."):
         tokens = tokenizer(sentence)
         sentences_tokenized.append(tokens)
     return sentences_tokenized
+
+def sentencesOktTokenize(sentences, tokenizer, name=""):
+    sentences_tokenized = []
+    for sentence in tqdm(sentences, desc=name+" Okt-tokenizing..."):
+        tokens = tokenizer.pos(sentence, join=True, norm=True)
+        sentences_tokenized.append(tokens)
+    return sentences_tokenized
+
+def pickOnlyNouns(sentences):
+    new_sentences = []
+    for sentence in sentences:
+        new_sentence = []
+        for word in sentence:
+            if "/Noun" in word:
+                new_sentence.append(word)
+        if len(new_sentence) > 0:
+            new_sentences.append(new_sentence)
+    return new_sentences 
+
+def pickOnlyAdjsVerb(sentences):
+    new_sentences = []
+    for sentence in sentences:
+        new_sentence = []
+        for word in sentence:
+            if "/Verb" in word or "/Adjective" in word:
+                new_sentence.append(word)
+        if len(new_sentence) > 0:
+            new_sentences.append(new_sentence)
+    return new_sentences 
 
 # bertmodel, vocab = get_pytorch_kobert_model()
 # tokenizer = get_tokenizer()
