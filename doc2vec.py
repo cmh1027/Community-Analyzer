@@ -1,7 +1,5 @@
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from kobert.pytorch_kobert import get_pytorch_kobert_model
 from tqdm import trange
-from merge_docvec import getMergedDocVec
 import json
 import os
 
@@ -20,7 +18,7 @@ for format in formats:
             tagged_data.append(TaggedDocument(words=sentence, tags=[tag]))
 
     max_epochs = 100
-    model = Doc2Vec(vector_size=100, alpha=0.025, min_alpha=0.00025, min_count=1, dm=1)
+    model = Doc2Vec(vector_size=300, alpha=0.025, min_alpha=0.00025, min_count=1, dm=1)
     vocab = tagged_data
     model.build_vocab(tagged_data)
 
