@@ -1,5 +1,5 @@
 import torch
-def getMergedDocVec(formats, weight=[1.0, 1.0, 1.0]):
+def getMergedDocVec(formats, weight=torch.tensor([1.0, 1.0, 1.0])):
     format_vectors = []
     num_formats = len(formats)
     for format in formats:
@@ -11,15 +11,11 @@ def getMergedDocVec(formats, weight=[1.0, 1.0, 1.0]):
                 vectors.append([float(i) for i in f.readline().split()[1:]])
             format_vectors.append(vectors)
     format_vectors = torch.tensor(format_vectors)
-    for i in range(num_formats): # standardization
+    n, p, d = format_vectors.shape
+    for i in range(n): # standardization
         format_vectors[i] = (format_vectors[i] - torch.mean(format_vectors[i])) / torch.var(format_vectors)
-    merged_vector = None
-    for i in range(num_formats):
-        if merged_vector is None:
-            merged_vector = format_vectors[i] * weight[i]
-        else:
-            merged_vector = torch.cat((merged_vector, format_vectors[i] * weight[i]), dim=1)
-
+    format_vectors = (format_vectors.view(n, -1) * weight[:, None]).view(n, p, d)
+    merged_vector = torch.cat(format_vectors.split(1)[:], dim=2).squeeze()
     return merged_vector
 if __name__ == "__main__":
     formats = ["bert", "okt_adjv", "okt_noun"]
