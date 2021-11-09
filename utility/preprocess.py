@@ -1,6 +1,6 @@
 import re
 from tqdm import tqdm
-# from kobert.pytorch_kobert import get_pytorch_kobert_model
+import torch
 
 def rawPreprocess(content, exclude=[]):
     for e in exclude:
@@ -11,12 +11,14 @@ def rawPreprocess(content, exclude=[]):
     content = content.strip()
     return content
 
-def sentencesBertTokenize(sentences, tokenizer, name=""):
+def sentencesBertTokenize(sentences, tokenizer, vocab, name=""):
     sentences_tokenized = []
+    sentences_tokenized_ind = []
     for sentence in tqdm(sentences, desc=name+" BERT-tokenizing..."):
         tokens = tokenizer(sentence)
         sentences_tokenized.append(tokens)
-    return sentences_tokenized
+        sentences_tokenized_ind.append(list(map(lambda s: vocab[s.replace("_", "")], tokens)))
+    return sentences_tokenized, sentences_tokenized_ind
 
 def sentencesOktTokenize(sentences, tokenizer, name=""):
     sentences_tokenized = []
@@ -42,23 +44,17 @@ def pickOnlyAdjsVerb(sentences):
         new_sentence = []
         for word in sentence:
             if "/Verb" in word or "/Adjective" in word:
-                new_sentence.append(word.replace("/Verb", "").replace("Adjective", ""))
+                new_sentence.append(word.replace("/Verb", "").replace("/Adjective", ""))
         if len(new_sentence) > 0:
             new_sentences.append(new_sentence)
     return new_sentences 
-
-# bertmodel, vocab = get_pytorch_kobert_model()
-# tokenizer = get_tokenizer()
-# tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
-# max_len = 64
-# transform = nlp.data.BERTSentenceTransform(tok, max_seq_length=max_len, pad=True, pair=False)
 
 # def gen_attention_mask(token_ids, valid_length):
 #     attention_mask = torch.zeros_like(token_ids)
 #     attention_mask[:valid_length] = 1
 #     return attention_mask.float()
 
-# def sentencesPreprocess(sentences):
+# def sentences2embed(sentences, bertmodel, transform):
 #     sentences_embedded = []
 #     for sentence in sentences:
 #         token_ids, valid_length, segment_ids = transform(sentence)
@@ -69,4 +65,3 @@ def pickOnlyAdjsVerb(sentences):
 #         _, embedding = bertmodel(input_ids = token_ids, token_type_ids = segment_ids, attention_mask = attention_mask.float())
 #         sentences_embedded.append(embedding.tolist())
 #     return sentences_embedded 
-

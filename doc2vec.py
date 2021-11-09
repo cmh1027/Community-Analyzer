@@ -4,8 +4,7 @@ import constant
 import json
 import os
 
-formats = ["bert", "okt_adjv", "okt_noun"]
-for format in formats:
+for format in constant.FORMATS:
     tokenized = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/" + format + "_tokenized.json"), 'r'))
     names = []
     idx2name = {}
@@ -34,7 +33,7 @@ for format in formats:
     modelfile = "./model/d2v_" + format + ".model"
     word2vec_file = modelfile + ".w2v_format"
     model.save(modelfile)
-    model.save_word2vec_format(word2vec_file, binary=False, doctag_vec=True, word_vec=False)
+    model.save_word2vec_format(word2vec_file, binary=True, doctag_vec=True, word_vec=False)
 json.dump(idx2name, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/idx2name.json"), 'w'))
 
 

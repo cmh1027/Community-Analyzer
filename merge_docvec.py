@@ -1,4 +1,5 @@
 import torch
+import constant
 def getMergedDocVec(formats, weight=torch.tensor([1.0, 1.0, 1.0])):
     format_vectors = []
     for format in formats:
@@ -17,5 +18,7 @@ def getMergedDocVec(formats, weight=torch.tensor([1.0, 1.0, 1.0])):
     merged_vector = torch.cat(format_vectors.split(1)[:], dim=2).squeeze()
     return merged_vector
 if __name__ == "__main__":
-    formats = ["bert", "okt_adjv", "okt_noun"]
-    torch.save(getMergedDocVec(formats), "model/d2v_merged.model.w2v_format")
+    formats = constant.FORMATS
+    merged = getMergedDocVec(formats)
+    torch.save(merged, "model/d2v_merged.model.w2v_format")
+    print(merged.shape)
