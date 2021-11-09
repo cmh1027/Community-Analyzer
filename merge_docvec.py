@@ -1,7 +1,6 @@
 import torch
 def getMergedDocVec(formats, weight=torch.tensor([1.0, 1.0, 1.0])):
     format_vectors = []
-    num_formats = len(formats)
     for format in formats:
         with open("model/d2v_"+format+".model.w2v_format") as f:
             u = f.readline()
@@ -19,4 +18,4 @@ def getMergedDocVec(formats, weight=torch.tensor([1.0, 1.0, 1.0])):
     return merged_vector
 if __name__ == "__main__":
     formats = ["bert", "okt_adjv", "okt_noun"]
-    print(getMergedDocVec(formats))
+    torch.save(getMergedDocVec(formats), "model/d2v_merged.model.w2v_format")

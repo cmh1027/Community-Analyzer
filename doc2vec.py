@@ -1,11 +1,12 @@
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from tqdm import trange
+import constant
 import json
 import os
 
 formats = ["bert", "okt_adjv", "okt_noun"]
 for format in formats:
-    tokenized = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/dcinside" + "_" + format + "_tokenized.json"), 'r'))
+    tokenized = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/" + format + "_tokenized.json"), 'r'))
     names = []
     idx2name = {}
     tagged_data = []
@@ -18,7 +19,7 @@ for format in formats:
             tagged_data.append(TaggedDocument(words=sentence, tags=[tag]))
 
     max_epochs = 100
-    model = Doc2Vec(vector_size=300, alpha=0.025, min_alpha=0.00025, min_count=1, dm=1)
+    model = Doc2Vec(vector_size=constant.VECSIZE, alpha=0.025, min_alpha=0.00025, min_count=1, dm=1, workers=4)
     vocab = tagged_data
     model.build_vocab(tagged_data)
 
@@ -34,7 +35,7 @@ for format in formats:
     word2vec_file = modelfile + ".w2v_format"
     model.save(modelfile)
     model.save_word2vec_format(word2vec_file, binary=False, doctag_vec=True, word_vec=False)
-    json.dump(idx2name, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/idx2name" + format + ".json"), 'w'))
+json.dump(idx2name, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/idx2name.json"), 'w'))
 
 
 

@@ -87,7 +87,7 @@ if __name__ == "__main__":
         entire_corpus = []
         for gallery in galleries:
             urls, gallery_name = getGalleryArticleURLs(gallery, page=1)
-            corpus = {"name":"디시/" + gallery_name, "content":[]}
+            corpus = {"name":"dcinside/" + gallery_name, "content":[]}
             for url in tqdm(urls, desc="Processing : " + gallery_name + "..."):
                 title, content = getArticleContent(url)
                 title = rawPreprocess(title, exclude=exclude)

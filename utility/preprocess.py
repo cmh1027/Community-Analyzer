@@ -31,7 +31,7 @@ def pickOnlyNouns(sentences):
         new_sentence = []
         for word in sentence:
             if "/Noun" in word:
-                new_sentence.append(word)
+                new_sentence.append(word.replace("/Noun", ""))
         if len(new_sentence) > 0:
             new_sentences.append(new_sentence)
     return new_sentences 
@@ -42,7 +42,7 @@ def pickOnlyAdjsVerb(sentences):
         new_sentence = []
         for word in sentence:
             if "/Verb" in word or "/Adjective" in word:
-                new_sentence.append(word)
+                new_sentence.append(word.replace("/Verb", "").replace("Adjective", ""))
         if len(new_sentence) > 0:
             new_sentences.append(new_sentence)
     return new_sentences 
