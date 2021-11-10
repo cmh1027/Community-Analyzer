@@ -16,11 +16,12 @@ if __name__ == "__main__":
     parser.add_argument('--words', type=str)
     parser.add_argument('--website', type=str)
     args = parser.parse_args()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     if args.mode == "train":
-        hidden_vector = torch.load('model/d2v_merged.model.w2v_format')
-        articles = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/articles_noexcess"))
-        actual_lengths = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/actual_lengths"))
-        website_idxs = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/website_idxs"))
+        hidden_vector = torch.load('model/d2v_merged.model.w2v_format').to(device)
+        articles = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/articles_noexcess")).to(device)
+        actual_lengths = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/actual_lengths")).to(device)
+        website_idxs = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/website_idxs")).to(device)
         num_websites = len(articles)
         decoder_layer = nn.TransformerDecoderLayer(d_model=constant.EMBED_SIZE, nhead=1)
         transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
