@@ -1,6 +1,5 @@
 import re
 from tqdm import tqdm
-import torch
 
 def rawPreprocess(content, exclude=[]):
     for e in exclude:
@@ -17,7 +16,7 @@ def sentencesBertTokenize(sentences, tokenizer, vocab, name=""):
     for sentence in tqdm(sentences, desc=name+" BERT-tokenizing..."):
         tokens = tokenizer(sentence)
         sentences_tokenized.append(tokens)
-        sentences_tokenized_ind.append(list(map(lambda s: vocab[s.replace("_", "")], tokens)))
+        sentences_tokenized_ind.append(list(map(lambda s: vocab[s], tokens)))
     return sentences_tokenized, sentences_tokenized_ind
 
 def sentencesOktTokenize(sentences, tokenizer, name=""):

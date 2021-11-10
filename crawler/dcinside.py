@@ -5,6 +5,8 @@ import sys, os
 from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.preprocess import rawPreprocess
+import utility.constant as constant
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 request_headers_main = {
     'Host': 'm.dcinside.com',
@@ -76,26 +78,33 @@ def getArticleContent(article_url):
         return soup.find("span", "tit").getText(), soup.find("div", "thum-txt").getText() # title, content
 
 
+def threading(url, corpus):
+    title, content = getArticleContent(url)
+    title = rawPreprocess(title, exclude=exclude)
+    content = rawPreprocess(content, exclude=exclude)
+    if(title != ""):
+        corpus['content'].append(title)
+    if(content != ""):
+        corpus['content'].append(content)
+
 if __name__ == "__main__":
     # response = requests.get('https://m.dcinside.com/category/hotgall', headers=request_headers_main, proxies=proxies, verify=verify)
     response = requests.get('https://m.dcinside.com/category/hotgall', headers=request_headers_main)
     if response.status_code == 200:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
-        galleries = getRankGalleryURLs(soup)
+        galleries = getRankGalleryURLs(soup, constant.WEBSITES_ATTIBUTES["dcinside"]["rank"])
         articleURLs = []
         entire_corpus = []
         for gallery in galleries:
-            urls, gallery_name = getGalleryArticleURLs(gallery, page=1)
+            urls, gallery_name = getGalleryArticleURLs(gallery, page=constant.WEBSITES_ATTIBUTES["dcinside"]["page"])
             corpus = {"name":"dcinside/" + gallery_name, "content":[]}
-            for url in tqdm(urls, desc="Processing : " + gallery_name + "..."):
-                title, content = getArticleContent(url)
-                title = rawPreprocess(title, exclude=exclude)
-                content = rawPreprocess(content, exclude=exclude)
-                if(title != ""):
-                    corpus['content'].append(title)
-                if(content != ""):
-                    corpus['content'].append(content)
+            with tqdm(total=len(urls), desc="Processing : " + gallery_name + "...") as pbar:
+                with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
+                    futures = [ex.submit(threading, url, corpus) for url in urls]
+                    for future in as_completed(futures):
+                        result = future.result()
+                        pbar.update(1)
             entire_corpus.append(corpus)
         json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data\dcinside.json"), 'w' ))
 
