@@ -14,12 +14,8 @@ headers.update({"Host": constant.WEBSITES_ATTIBUTES['fmkorea']['host']})
 def getRankGalleryURLs(soup, rank=5): # 1위 ~ rank위까지 긁어옴
     urls = []
     hotBoards = soup.find("nav", "fmkorea_m_navi")
-    print('hotboards')
-    print(hotBoards)
     res = hotBoards.findAll('a')
-    # print(res)
     for i in range(1, rank+1): # exclude javscript
-        # print(res[i]["href"])
         if res[i]["href"] == "hotdeal" :
             continue
         urls.append(constant.WEBSITES_ATTIBUTES['fmkorea']['prefix'] + res[i]["href"])

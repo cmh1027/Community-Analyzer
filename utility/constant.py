@@ -28,19 +28,19 @@ WEBSITES_ATTIBUTES = {
         "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."]
     },
     "pann": {
-        "prefix": "https://pann.nate.com/",
-        "host" : "m.fmkorea.com",
+        "prefix": "https://m.pann.nate.com/",
+        "host" : "m.pann.nate.com",
         "mainHeader": {},
         "galleryHeader": {},
         "rank": 0,
-        "page": 10,
+        "page": 1,
         "exclude" : [],
         "hotGalleries": [
-            "https://pann.nate.com/talk/c20001",
-            "https://pann.nate.com/talk/c20047",
-            "https://pann.nate.com/talk/c20048",
-            "https://pann.nate.com/talk/c20050",
-            "https://pann.nate.com/talk/c20028"
+            "https://m.pann.nate.com/talk/c20001?order=N",
+            "https://m.pann.nate.com/talk/c20047?order=N",
+            "https://m.pann.nate.com/talk/c20048?order=N",
+            "https://m.pann.nate.com/talk/c20050?order=N",
+            "https://m.pann.nate.com/talk/c20028?order=N"
         ]
     },
     "": {
