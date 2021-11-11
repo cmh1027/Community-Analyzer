@@ -16,7 +16,7 @@ WEBSITES_ATTIBUTES = {
     "dcinside" : {
         "prefix": "https://m.dcinside.com/category/hotgall", 
         "host" : "m.dcinside.com",
-        "rank" : 5,
+        "rank" : 1,
         "page" : 1,
         "exclude" : ["- dc official App"]
     },

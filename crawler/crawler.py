@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from functions import dcinside, fmkorea
 
-communityList = ['dcinside', 'fmkorea', 'pann', 'ruliweb', 'theqoo']
+communityList = ['dcinside', 'fmkorea']
 communityModules = [dcinside, fmkorea]
 ############### For fiddler analysis ###############
 proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
@@ -29,19 +29,20 @@ if __name__ == "__main__":
             # response = requests.get('https://m.dcinside.com/category/hotgall', headers=constant.DEFAULT_HEADER.update({"Host": constant.WEBSITES_ATTIBUTES['dcinside']['host']}))
             response = requests.get(constant.WEBSITES_ATTIBUTES[community]["prefix"], headers=headers)
             
-            print(constant.WEBSITES_ATTIBUTES[community]["prefix"])
-            print(headers)
+            print(response)
+            # print(headers)
             if response.status_code == 200:
                 html = response.text
                 soup = BeautifulSoup(html, 'html.parser')
                 galleries = communityModules[i].getRankGalleryURLs(soup, constant.WEBSITES_ATTIBUTES[community]["rank"])
-                print(galleries)
+                # print(galleries)
                 articleURLs = []
                 entire_corpus = []
                 for gallery in galleries:
+                    print('start crawling: ' + community)
                     urls, gallery_name = communityModules[i].getGalleryArticleURLs(gallery, page=constant.WEBSITES_ATTIBUTES[community]["page"])
-                    print(urls)
-                    print(galleries)
+                    # print(urls)
+                    # print(galleries)
                     corpus = {"name": community + "/" + gallery_name, "content":[]}
                     # print(corpus)
                     with tqdm(total=len(urls), desc="Processing : " + community + " / " + gallery_name + " =>") as pbar:
@@ -56,6 +57,6 @@ if __name__ == "__main__":
         else : 
             print(response.status_code)
             assert response.status_code != 200
-    except KeyboardInterrupt:
+    except KeyboardInterrupt: # Ctrl + c로 중단 가능
         pass
 
