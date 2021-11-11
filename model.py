@@ -110,6 +110,7 @@ if __name__ == "__main__":
             output_embed = torch.softmax(output_embed / constant.SOFTMAX_TEMPERATURE , dim=-1)
             output_embed = output_embed[-1,:,:] # the last timestep
             prob, indices = output_embed.topk(constant.RANDOM_CHOICE, dim=-1)
+            prob[indices == constant.UNK_TOKEN] = 0
             pred_token = indices.squeeze(0)[torch.multinomial(prob, 1).squeeze(0)]
             if pred_token == constant.END_TOKEN:
                 break
