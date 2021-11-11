@@ -43,7 +43,7 @@ if __name__ == "__main__":
             hidden = hidden_vector[website_idxs[batchidx]].unsqueeze(0)
             inputs = articles[batchidx]
             label = torch.cat((inputs[:, 1:], torch.tensor([constant.PAD_TOKEN]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
-            label[:, length-1] = constant.END_TOKEN
+            label[torch.arange(len(label)), length-1] = constant.END_TOKEN
             b, s = inputs.shape
             sequence_mask = generate_square_subsequent_mask(constant.SENTENCE_MAXLEN)
             padding_mask = torch.zeros(b, s)
