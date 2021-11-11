@@ -8,6 +8,10 @@ import argparse
 from kobert.pytorch_kobert import get_pytorch_kobert_model
 from kobert.utils import get_tokenizer
 import gluonnlp as nlp
+import matplotlib.pyplot as plt
+
+def generate_square_subsequent_mask(sz: int):
+    return torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1)
 
 
 if __name__ == "__main__":
@@ -29,47 +33,49 @@ if __name__ == "__main__":
         output_linear_layer = nn.Linear(constant.EMBED_SIZE, constant.BERT_VOCAB_SIZE)
         optimizer = optim.Adam(list(transformer_decoder.parameters())
                                 + list(input_embed_layer.parameters()) + list(output_linear_layer.parameters()))
-        constant.EPOCH = 100
         loss_weights = torch.ones(constant.BERT_VOCAB_SIZE)
         loss_weights[constant.PAD_TOKEN] = 0.0
+        losses = []
         for epoch in trange(constant.EPOCH, desc="training..."):
             # (len, batch, embed_size)
             batchidx = torch.randint(len(articles), (constant.BATCH_SIZE,))
             length = actual_lengths[batchidx]
             hidden = hidden_vector[website_idxs[batchidx]].unsqueeze(0)
-            input_data = articles[batchidx]
-            label = torch.cat((input_data[:, 1:], torch.tensor([constant.PAD_TOKEN]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
-            label[:, length] = constant.END_TOKEN
-            b, s = input_data.shape
+            inputs = articles[batchidx]
+            label = torch.cat((inputs[:, 1:], torch.tensor([constant.PAD_TOKEN]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
+            label[:, length-1] = constant.END_TOKEN
+            b, s = inputs.shape
+            sequence_mask = generate_square_subsequent_mask(constant.SENTENCE_MAXLEN)
             padding_mask = torch.zeros(b, s)
             for i, l in enumerate(length):
                 padding_mask[i][l:] = 1
-            inputs = input_data[:,0].view(-1,1)
-            for i in range(1, s):
-                tgt = inputs
-                tgt = input_embed_layer(tgt)
-                tgt = tgt.transpose(0, 1)
-                output = transformer_decoder(
-                    tgt=tgt, 
-                    memory=hidden, 
-                    tgt_key_padding_mask = padding_mask[:, :i])
-                output_embed = output_linear_layer(output)
-                output_embed = torch.softmax(output_embed, dim=-1)
-                output_embed = output_embed[-1,:,:] # the last timestep
-                values, indices = output_embed.max(dim=-1)
-                pred_token = indices.view(-1, 1)
-                inputs = torch.cat((inputs, pred_token), dim=-1)
-            inputs_embed = input_embed_layer(inputs)
+            tgt = inputs
+            tgt = input_embed_layer(tgt)
+            tgt = tgt.transpose(0, 1)
+            output = transformer_decoder(
+                tgt=tgt, 
+                memory=hidden, 
+                tgt_mask = sequence_mask,
+                tgt_key_padding_mask = padding_mask)
+            output_embed = output_linear_layer(output)
+            output_embed = torch.softmax(output_embed, dim=-1)
+            values, pred = output_embed.max(dim=-1)
+            inputs_embed = input_embed_layer(pred)
             output = output_linear_layer(inputs_embed)
-            output = output.transpose(1, 2)
-            output[:, constant.PAD_TOKEN, :] = -1e+6
+            output = output.view(-1, output.shape[-1])
+            label = label.view(-1)
             criterion = nn.CrossEntropyLoss(weight=loss_weights)
             loss = criterion(output, label)
-            # if (epoch + 1) % 1 == 0:
-            #     print('Loss =', '{:.6f}'.format(loss))
+            losses.append(loss.item())
+            # if epoch % 1 == 0:
+            #     print("Loss : %.3f", loss.item())
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+        plt.plot(range(len(losses)), losses)
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.savefig('Loss.png')
         torch.save(transformer_decoder, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
         torch.save(input_embed_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/input_embed_layer"))
         torch.save(output_linear_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
