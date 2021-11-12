@@ -8,12 +8,14 @@ from utility.preprocess import rawPreprocess
 import utility.constant as constant
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from functions import dcinside, fmkorea, pann
+from functions import dcinside, fmkorea, pann, ruliweb
 
-# communityList = ['dcinside', 'fmkorea', 'pann']
-# communityModules = [dcinside, fmkorea, pann]
-communityList = ['fmkorea']
-communityModules = [fmkorea]
+# communityList = ['dcinside', 'fmkorea', 'pann', 'ruliweb']
+# communityModules = [dcinside, fmkorea, pann, ruliweb]
+communityList = ['ruliweb']
+communityModules = [ruliweb]
+# communityList = ['dcinside']
+# communityModules = [dcinside]
 ############### For fiddler analysis ###############
 proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
 verify = "FiddlerRoot.pem"
@@ -34,16 +36,21 @@ if __name__ == "__main__":
                 soup = BeautifulSoup(html, 'html.parser')
                 if(community == 'pann'):
                     galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
+                elif(community == 'ruliweb'):
+                    galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
                 else:    
                     galleries = communityModules[i].getRankGalleryURLs(soup, constant.WEBSITES_ATTIBUTES[community]["rank"])
-                #print(galleries)    
+                print(galleries)    
                 articleURLs = []
                 entire_corpus = []
-                for gallery in galleries:
+                for j, gallery in enumerate(galleries):
                 #     print('start crawling: ' + community)
                     urls, gallery_name = communityModules[i].getGalleryArticleURLs(gallery, page=constant.WEBSITES_ATTIBUTES[community]["page"])
+                    if(community == 'ruliweb'):
+                        gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
                     corpus = {"name": community + "/" + gallery_name, "content":[]}
-                    # print(corpus)
+                    # print(gallery_name)
+                    # print(urls)
                     with tqdm(total=len(urls), desc="Processing : " + community + " / " + gallery_name + " =>") as pbar:
                         with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
                             futures = [ex.submit(communityModules[i].threading, url, corpus) for url in urls]
@@ -51,7 +58,7 @@ if __name__ == "__main__":
                                 result = future.result()
                                 pbar.update(1)
                     entire_corpus.append(corpus)
-                # json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
+                json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
 
             else : 
                 print(response.status_code)

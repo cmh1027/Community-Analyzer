@@ -43,13 +43,28 @@ WEBSITES_ATTIBUTES = {
             "https://m.pann.nate.com/talk/c20028?order=N"
         ]
     },
-    "": {
-        "prefix": "",
+    "ruliweb": {
+        "prefix": "https://m.ruliweb.com/",
+        "host" : "m.ruliweb.com",
         "mainHeader": {},
         "galleryHeader": {},
-        "rank": 0,
+        "rank": 5,
         "page": 10,
-        "exclude" : []
+        "exclude" : [],
+        "hotGalleries": [
+            "https://m.ruliweb.com/community/board/300148",
+            "https://m.ruliweb.com/community/board/300143",
+            "https://m.ruliweb.com/community/board/300141",
+            "https://m.ruliweb.com/community/board/300142",
+            "https://m.ruliweb.com/community/board/300147"
+        ],
+        "hotGalleries_name": [
+            "정치유머",
+            "유머",
+            "자유",
+            "질문",
+            "고민상담"
+        ]
     },
     "": {
         "prefix": "",
