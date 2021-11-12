@@ -38,12 +38,11 @@ if __name__ == "__main__":
             for sentence in data["content"]:
                 tagged_data.append(TaggedDocument(words=sentence, tags=[tag]))
 
-        max_epochs = 1000
         model = Doc2Vec(vector_size=constant.DOCVEC_SIZE, alpha=0.025, min_alpha=0.00025, min_count=1, dm=1, workers=4)
         vocab = tagged_data
         model.build_vocab(tagged_data)
 
-        for epoch in trange(max_epochs, desc=format+" Doc2vec training..."):
+        for epoch in trange(constant.DOC2VEC_EPOCH, desc=format+" Doc2vec training..."):
             model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
             # decrease the learning rate
             model.alpha -= 0.0002
@@ -66,10 +65,7 @@ if __name__ == "__main__":
             format_vectors.append(vectors)
     format_vectors = torch.tensor(format_vectors)
     n, p, d = format_vectors.shape
-    for i in trange(n, desc="standardization..."): # standardization
-        format_vectors[i] = (format_vectors[i] - torch.mean(format_vectors[i])) / torch.var(format_vectors)
-    format_vectors = (format_vectors.view(n, -1) * constant.WEIGHT[:, None]).view(n, p, d)
-    merged_vector = torch.cat(format_vectors.split(1)[:], dim=2).squeeze()
-    torch.save(merged_vector, "model/d2v_merged.model.w2v_format")
+    format_vectors = (format_vectors - torch.mean(format_vectors, dim=-1).unsqueeze(-1)) / torch.sqrt(torch.var(format_vectors, dim=-1).unsqueeze(-1))
+    torch.save(format_vectors, "model/d2v.w2v_format")
 
 

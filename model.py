@@ -23,7 +23,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if args.mode == "train":
-        hidden_vector = torch.load('model/d2v_merged.model.w2v_format').to(device)
+        hidden_vector = torch.load('model/d2v.w2v_format').to(device)
+        hidden_vector = torch.cat(hidden_vector.split(1)[:], dim=2).squeeze()
         articles = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/articles_noexcess")).to(device)
         actual_lengths = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/actual_lengths")).to(device)
         website_idxs = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/website_idxs")).to(device)
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         loss_weights = torch.ones(constant.BERT_VOCAB_SIZE)
         loss_weights[BertToken.PAD_TOKEN_IND] = 0.0
         losses = []
-        for epoch in trange(constant.EPOCH, desc="training..."):
+        for epoch in trange(constant.DECODER_EPOCH, desc="training..."):
             # (len, batch, embed_size)
             batchidx = torch.randint(len(articles), (constant.BATCH_SIZE,))
             length = actual_lengths[batchidx]
@@ -85,7 +86,11 @@ if __name__ == "__main__":
             parser.error('Starting words(sentence) is required for the evaluation')
         if args.website is None:
             parser.error('Website index is required for the evaluation')
-        hidden_vector = torch.load('model/d2v_merged.model.w2v_format')
+        hidden_vector = torch.load('model/d2v.w2v_format')
+        n, p, d = hidden_vector.shape
+        hidden_vector = (hidden_vector.view(n, -1) * constant.WEIGHT[:, None]).view(n, p, d)
+        hidden_vector = torch.cat(hidden_vector.split(1)[:], dim=-1).squeeze()
+        hidden_vector = (hidden_vector - torch.mean(hidden_vector, dim=-1).unsqueeze(-1)) / torch.sqrt(torch.var(hidden_vector, dim=-1).unsqueeze(-1))
         index = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/idx2name.json"), 'r'))
         print("Language Generation in " + index[args.website] + " Style")
         bertmodel, vocab = get_pytorch_kobert_model()
