@@ -32,7 +32,7 @@ WEBSITES_ATTIBUTES = {
         "host" : "m.pann.nate.com",
         "mainHeader": {},
         "galleryHeader": {},
-        "rank": 0,
+        "rank": 5,
         "page": 1,
         "exclude" : [],
         "hotGalleries": [
@@ -41,13 +41,18 @@ WEBSITES_ATTIBUTES = {
             "https://m.pann.nate.com/talk/c20048?order=N",
             "https://m.pann.nate.com/talk/c20050?order=N",
             "https://m.pann.nate.com/talk/c20028?order=N"
+        ],
+        "hotGalleries_name": [
+            "사는 얘기",
+            "싱글톡",
+            "훈훈한 이야기",
+            "TV톡",
+            "엔터톡"
         ]
     },
     "ruliweb": {
         "prefix": "https://m.ruliweb.com/",
         "host" : "m.ruliweb.com",
-        "mainHeader": {},
-        "galleryHeader": {},
         "rank": 5,
         "page": 10,
         "exclude" : [],
@@ -66,13 +71,26 @@ WEBSITES_ATTIBUTES = {
             "고민상담"
         ]
     },
-    "": {
-        "prefix": "",
-        "mainHeader": {},
-        "galleryHeader": {},
-        "rank": 0,
-        "page": 10,
-        "exclude" : []
+    "theqoo": {
+        "prefix": "https://theqoo.net/",
+        "host" : "theqoo.net",
+        "rank": 5,
+        "page": 1,
+        "exclude" : [],
+        "hotGalleries": [
+            "https://theqoo.net/square",
+            "https://theqoo.net/beauty",
+            "https://theqoo.net/ktalk",
+            "https://theqoo.net/dyb",
+            "https://theqoo.net/japan"
+        ],
+        "hotGalleries_name": [
+            "스퀘어",
+            "뷰티",
+            "케이돌토크",
+            "드영배",
+            "재팬"
+        ]
     },
 }
 BERT_VOCAB_SIZE = 8002

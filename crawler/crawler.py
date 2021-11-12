@@ -8,12 +8,12 @@ from utility.preprocess import rawPreprocess
 import utility.constant as constant
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from functions import dcinside, fmkorea, pann, ruliweb
+from functions import dcinside, fmkorea, pann, ruliweb, theqoo
 
-# communityList = ['dcinside', 'fmkorea', 'pann', 'ruliweb']
-# communityModules = [dcinside, fmkorea, pann, ruliweb]
-communityList = ['ruliweb']
-communityModules = [ruliweb]
+# communityList = ['dcinside', 'fmkorea', 'pann', 'ruliweb', 'theqoo']
+# communityModules = [dcinside, fmkorea, pann, ruliweb, theqoo]
+communityList = ['pann']
+communityModules = [pann]
 # communityList = ['dcinside']
 # communityModules = [dcinside]
 ############### For fiddler analysis ###############
@@ -38,6 +38,8 @@ if __name__ == "__main__":
                     galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
                 elif(community == 'ruliweb'):
                     galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
+                elif(community == 'theqoo'):
+                    galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]    
                 else:    
                     galleries = communityModules[i].getRankGalleryURLs(soup, constant.WEBSITES_ATTIBUTES[community]["rank"])
                 print(galleries)    
@@ -46,7 +48,11 @@ if __name__ == "__main__":
                 for j, gallery in enumerate(galleries):
                 #     print('start crawling: ' + community)
                     urls, gallery_name = communityModules[i].getGalleryArticleURLs(gallery, page=constant.WEBSITES_ATTIBUTES[community]["page"])
-                    if(community == 'ruliweb'):
+                    if(community == 'pann'):
+                        gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
+                    elif(community == 'ruliweb'):
+                        gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
+                    elif(community == 'theqoo'):
                         gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
                     corpus = {"name": community + "/" + gallery_name, "content":[]}
                     # print(gallery_name)
@@ -58,7 +64,7 @@ if __name__ == "__main__":
                                 result = future.result()
                                 pbar.update(1)
                     entire_corpus.append(corpus)
-                json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
+                # json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
 
             else : 
                 print(response.status_code)
