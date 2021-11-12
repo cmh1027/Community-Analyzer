@@ -16,15 +16,15 @@ WEBSITES_ATTIBUTES = {
     "dcinside" : {
         "prefix": "https://m.dcinside.com/category/hotgall", 
         "host" : "m.dcinside.com",
-        "rank" : 1,
-        "page" : 1,
+        "rank" : 5,
+        "page" : 10,
         "exclude" : ["- dc official App"]
     },
     "fmkorea": {
         "prefix": "https://m.fmkorea.com/",
         "host" : "m.fmkorea.com",
         "rank": 6,
-        "page": 1,
+        "page": 10,
         "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."]
     },
     "pann": {

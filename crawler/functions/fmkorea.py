@@ -32,7 +32,7 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
             soup = BeautifulSoup(html, 'html.parser')
             if p == 1:
                 gallery_name = soup.find("h1", "ngeb").findChild("a").getText().strip()
-                print(gallery_name)
+                #print(gallery_name)
                 
             articles = soup.find("ol", "bd_lst")
             for article in articles.findAll('li', 'clear'):
@@ -40,9 +40,9 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
                     continue
                 url = article.findChild("a")["href"]
                 urls.append(constant.WEBSITES_ATTIBUTES['fmkorea']['prefix'] + url)
-            print(urls)
+            #print(urls)
         else: 
-            print(response.status_code)
+            #print(response.status_code)
             assert response.status_code != 200
     return urls, gallery_name
 
@@ -58,7 +58,7 @@ def getArticleContent(article_url):
 
 def threading(url, corpus):
     title, content = getArticleContent(url)
-    print('title: ' + title + " / content: " + content)
+    # print('title: ' + title + " / content: " + content)
     title = rawPreprocess(title, exclude=constant.WEBSITES_ATTIBUTES["fmkorea"]["exclude"])
     content = rawPreprocess(content, exclude=constant.WEBSITES_ATTIBUTES["fmkorea"]["exclude"])
     if(title != ""):
