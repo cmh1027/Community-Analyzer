@@ -33,7 +33,7 @@ WEBSITES_ATTIBUTES = {
         "mainHeader": {},
         "galleryHeader": {},
         "rank": 5,
-        "page": 1,
+        "page": 10,
         "exclude" : [],
         "hotGalleries": [
             "https://m.pann.nate.com/talk/c20001?order=N",
