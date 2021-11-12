@@ -3,6 +3,7 @@ from torch import nn, optim
 import torch.nn as nn
 import json, os
 from utility import constant
+from utility.constant import BertToken
 from tqdm import trange
 import argparse
 from kobert.pytorch_kobert import get_pytorch_kobert_model
@@ -34,7 +35,7 @@ if __name__ == "__main__":
         optimizer = optim.Adam(list(transformer_decoder.parameters())
                                 + list(input_embed_layer.parameters()) + list(output_linear_layer.parameters()))
         loss_weights = torch.ones(constant.BERT_VOCAB_SIZE)
-        loss_weights[constant.PAD_TOKEN] = 0.0
+        loss_weights[BertToken.PAD_TOKEN_IND] = 0.0
         losses = []
         for epoch in trange(constant.EPOCH, desc="training..."):
             # (len, batch, embed_size)
@@ -42,8 +43,8 @@ if __name__ == "__main__":
             length = actual_lengths[batchidx]
             hidden = hidden_vector[website_idxs[batchidx]].unsqueeze(0)
             inputs = articles[batchidx]
-            label = torch.cat((inputs[:, 1:], torch.tensor([constant.PAD_TOKEN]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
-            label[torch.arange(len(label)), length-1] = constant.END_TOKEN
+            label = torch.cat((inputs[:, 1:], torch.tensor([BertToken.PAD_TOKEN_IND]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
+            label[torch.arange(len(label)), length-1] = BertToken.END_TOKEN_IND
             b, s = inputs.shape
             sequence_mask = generate_square_subsequent_mask(constant.SENTENCE_MAXLEN)
             padding_mask = torch.zeros(b, s)
@@ -110,9 +111,9 @@ if __name__ == "__main__":
             output_embed = torch.softmax(output_embed / constant.SOFTMAX_TEMPERATURE , dim=-1)
             output_embed = output_embed[-1,:,:] # the last timestep
             prob, indices = output_embed.topk(constant.RANDOM_CHOICE, dim=-1)
-            prob[indices == constant.UNK_TOKEN] = 0
+            prob[indices == BertToken.UNK_TOKEN_IND] = 0
             pred_token = indices.squeeze(0)[torch.multinomial(prob, 1).squeeze(0)]
-            if pred_token == constant.END_TOKEN:
+            if pred_token == BertToken.END_TOKEN_IND:
                 break
             inputs = torch.cat((inputs, pred_token), dim=-1)
             length += 1

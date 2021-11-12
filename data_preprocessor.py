@@ -1,7 +1,7 @@
 import torch
-import torch.nn.functional as function
 import os, json
 from utility import constant
+from utility.constant import BertToken
 from tqdm import tqdm
 
 if __name__ == "__main__":
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         for idx, article in tqdm(enumerate(articles), desc=data["name"] + " : Adding PAD tokens..."):
             article = articles[idx]
             actual_lengths.append(len(article))
-            articles[idx][len(article):max_len] = [constant.PAD_TOKEN] * (max_len - len(article))
+            articles[idx][len(article):max_len] = [BertToken.PAD_TOKEN_IND] * (max_len - len(article))
         articles_noexcess.append(torch.tensor(articles))
     articles_noexcess = torch.cat(articles_noexcess[:], dim=0)
     website_idxs = torch.tensor(website_idxs)

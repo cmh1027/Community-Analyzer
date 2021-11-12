@@ -1,12 +1,17 @@
 import re
 from tqdm import tqdm
 
-def rawPreprocess(content, exclude=[]):
+def sentencePreprocess(content, exclude=[]):
     for e in exclude:
         content = content.replace(e, "")
-    content.replace("\n", " ")
-    hangul = re.compile('[^ ㄱ-ㅣ가-힣]')  # 한글만
-    content = hangul.sub('', content)
+    content.replace("\n", ".")
+    content = re.compile(r'[^ .,?!ㄱ-ㅣ가-힣]').sub('', content) # 한글, 문장부호만
+    startreg = re.search(r"[ㄱ-ㅣ가-힣]", content)
+    if startreg is None:
+        content = ""
+    else:
+        content = content[startreg.start():] # 첫 문장은 한글로 시작
+    content = re.compile(r'([.,?! ])\1+').sub(r'\1', content) # 연속된 문장부호 제거
     content = content.strip()
     return content
 

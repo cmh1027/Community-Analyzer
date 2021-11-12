@@ -1,12 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import json
 import sys, os
-from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from utility.preprocess import rawPreprocess
 import utility.constant as constant
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 headers = constant.DEFAULT_HEADER
 headers.update({"Host": constant.WEBSITES_ATTIBUTES['ruliweb']['host']})
@@ -61,13 +57,3 @@ def getArticleContent(article_url):
         return "", ""
     else:
         return soup.find("span", "subject_inner_text").getText(), soup.find("article").getText() # title, content
-
-def threading(url, corpus):
-    title, content = getArticleContent(url)
-    # print('title: ' + title + " / content: " + content)
-    title = rawPreprocess(title, exclude=constant.WEBSITES_ATTIBUTES["ruliweb"]["exclude"])
-    content = rawPreprocess(content, exclude=constant.WEBSITES_ATTIBUTES["ruliweb"]["exclude"])
-    if(title != ""):
-        corpus['content'].append(title)
-    if(content != ""):
-        corpus['content'].append(content)
