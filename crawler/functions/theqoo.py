@@ -4,18 +4,23 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import utility.constant as constant
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+option = webdriver.ChromeOptions()
+option.add_argument('--kiosk-printing')
+option.add_argument('--log-level=3') 
+option.headless = True 
+option.add_argument('--no-sandbox')
+option.add_argument('--disable-dev-shm-usage')
+driver = webdriver.Chrome(chrome_options=option, executable_path='E:\GitHub\Community-Analyzer\crawler\chromedriver.exe') # 이거 로컬환경 맞게 세팅해야함
+
 headers = constant.DEFAULT_HEADER
 headers.update({"Host": constant.WEBSITES_ATTIBUTES['theqoo']['host']})
 
 
-# def getRankGalleryURLs(soup, rank=5): # 1위 ~ rank위까지 긁어옴
-#     urls = []
-#     hotgalls = soup.find("div", "container")
-#     res = hotgalls.findAll('a')
-#     for i in range(1, rank+1): # exclude javscript
-#         # print(res[i]["href"])
-#         urls.append(res[i]["href"])
-#     return urls
 
 def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
     urls = []
@@ -24,32 +29,22 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
     # print(gallery_cate)
     
     for p in range(1, page+1):
-        # https://theqoo.net/index.php?mid=square&filter_mode=normal&page=1
-        response = requests.get("https://theqoo.net/index.php?mid=" + gallery_cate+"&filter_mode=normal&page="+str(p), headers=headers)
+        
+        driver.get("https://theqoo.net/index.php?mid=" + gallery_cate+"&filter_mode=normal&page="+str(p))
         gallery_name = ''
-        if response.status_code == 200:
-            html = response.text
-            soup = BeautifulSoup(html, 'html.parser')
-            print(soup)
-            articles = soup.find("ul", "list")          
-            # print(articles)
-            for article in articles.findAll('a', 'list-link'):
-                url = article["href"]
-                urls.append(url)
-                        
-        else: 
-            print(response.status_code)
-            assert response.status_code != 200
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        articles = soup.find("tbody", "hide_notice").findAll("tr", {'class': None})        
+        
+        for article in articles:
+            url = article.find("a")["href"]
+            urls.append("https://theqoo.net" + url)
     return urls, gallery_name
 
 def getArticleContent(article_url):
-    # response = requests.get(article_url, headers=request_headers_gallery, proxies=proxies, verify=verify)
-    response = requests.get(article_url, headers=headers)
-    # print(response)
-    html = response.text
-    soup = BeautifulSoup(html, 'html.parser')
-    # print(soup)
-    if soup.find("span", "subject_inner_text") is None: # article has been removed
+    driver.get(article_url)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+    if soup.find("span", "title") is None: # article has been removed
         return "", ""
     else:
-        return soup.find("span", "subject_inner_text").getText(), soup.find("article").getText() # title, content
+        return soup.find("span", "title").getText(), soup.find("article").getText() # title, content
