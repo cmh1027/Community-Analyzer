@@ -50,6 +50,21 @@ WEBSITES_ATTIBUTES = {
             "엔터톡"
         ]
     },
+    "clien": {
+        "prefix": "https://m.clien.net/",
+        "host" : "m.clien.net",
+        "mainHeader": {},
+        "galleryHeader": {},
+        "rank": 1,
+        "page": 50,
+        "exclude" : [],
+        "hotGalleries": [
+            "https://m.clien.net/service/group/clien_all",
+        ],
+        "hotGalleries_name": [
+            "톺아보기",
+        ]
+    },
     "ruliweb": {
         "prefix": "https://m.ruliweb.com/",
         "host" : "m.ruliweb.com",

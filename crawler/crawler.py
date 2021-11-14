@@ -7,14 +7,14 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.preprocess import sentencePreprocess
 import utility.constant as constant
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from functions import dcinside, pann, ruliweb, theqoo, fmkorea
+from functions import dcinside, pann, ruliweb, theqoo, fmkorea, clien
 from konlpy.tag import Okt 
 ############### For fiddler analysis ###############
 proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
 verify = "FiddlerRoot.pem"
 ####################################################
-communityList = [('dcinside', dcinside)]
-# communityList = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('theqoo', theqoo), ('fmkorea', fmkorea)]
+communityList = [('clien', clien)]
+# communityList = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('clien', clien), ('theqoo', theqoo), ('fmkorea', fmkorea)]
 
 def threading(url, corpus, module):
     title, content = module.getArticleContent(url)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             if response.status_code == 200:
                 html = response.text
                 soup = BeautifulSoup(html, 'html.parser')
-                if community in ['pann', 'ruliweb', 'theqoo']:
+                if community in ['pann', 'ruliweb', 'theqoo', 'clien']:
                     galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
                 # elif(community == 'theqoo'):
                 #     galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]    
@@ -44,12 +44,8 @@ if __name__ == "__main__":
                 for j, gallery in enumerate(galleries):
                 #     print('start crawling: ' + community)
                     urls, gallery_name = module.getGalleryArticleURLs(gallery, page=constant.WEBSITES_ATTIBUTES[community]["page"])
-                    if(community == 'pann'):
+                    if community in ['pann', 'ruliweb', 'clien']:
                         gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
-                    elif(community == 'ruliweb'):
-                        gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
-                    # elif(community == 'theqoo'):
-                    #     gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
                     corpus = []
                     # print(gallery_name)
                     # print(urls)
