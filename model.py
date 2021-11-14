@@ -10,6 +10,7 @@ from kobert.pytorch_kobert import get_pytorch_kobert_model
 from kobert.utils import get_tokenizer
 import gluonnlp as nlp
 import matplotlib.pyplot as plt
+from konlpy.tag import Okt 
 
 def generate_square_subsequent_mask(sz: int):
     return torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1)
@@ -90,13 +91,13 @@ if __name__ == "__main__":
         n, p, d = hidden_vector.shape
         hidden_vector = (hidden_vector.view(n, -1) * constant.WEIGHT[:, None]).view(n, p, d)
         hidden_vector = torch.cat(hidden_vector.split(1)[:], dim=-1).squeeze()
-        hidden_vector = (hidden_vector - torch.mean(hidden_vector, dim=-1).unsqueeze(-1)) / torch.sqrt(torch.var(hidden_vector, dim=-1).unsqueeze(-1))
         index = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/idx2name.json"), 'r'))
         print("Language Generation in " + index[args.website] + " Style")
+        okt = Okt()
         bertmodel, vocab = get_pytorch_kobert_model()
         tokenizer = get_tokenizer()
         tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
-        tokens = tok(args.words)
+        tokens = tok(okt.normalize(args.words))
         inputs = torch.tensor(list(map(lambda s: vocab[s], tokens)))
         length = len(inputs)
         hidden = hidden_vector[int(args.website)].unsqueeze(0).unsqueeze(1)
