@@ -5,39 +5,83 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.preprocess import sentencePreprocess
 import utility.constant as constant
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from functions import dcinside, pann, ruliweb, theqoo, clien #, fmkorea
+import threading
+import argparse
+from nordvpn_connect import initialize_vpn, rotate_VPN, close_vpn_connection
+from functions import dcinside, pann, ruliweb, theqoo, clien, fmkorea
 ############### For fiddler analysis ###############
 # proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
 # verify = "FiddlerRoot.pem"
 ####################################################
-communityList = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('clien', clien), ('theqoo', theqoo)]
-# communityList = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('clien', clien), ('theqoo', theqoo), ('fmkorea', fmkorea)]
+communityList_VPN = [('clien', clien)]
+# communityList_VPN = [('fmkorea', fmkorea)]
+communityList_NoVPN = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('theqoo', theqoo)]
 
-def threading(url, corpus, module):
-    title, content = module.getArticleContent(url)
-    corpus.append(title)
-    corpus.append(content)
+class VPNWrapper:
+    vpn = None
+
+vpnLock = threading.Lock() 
+waiting = False
+vpn = VPNWrapper()
+
+def articleRetriever(url, module, pbar, vpn):
+    def corpus_append(url):
+        title, content = module.getArticleContent(url)
+        pbar.update(1)
+        return [title, content]      
+    try:
+        return corpus_append(url)
+    except ConnectionAbortedError:
+        if vpnLock.acquire(blocking=False) is True:
+            waiting = True
+            print("\r", end="")
+            if vpn.vpn is None:
+                vpn.vpn = initialize_vpn(constant.VPN_COUNTRY)
+            else:
+                rotate_VPN(vpn.vpn)
+            waiting = False
+            vpnLock.release()
+        else:
+            while waiting is True:
+                pass
+        return articleRetriever(url, module, pbar, vpn)
+
 
 if __name__ == "__main__":
-    for i, (community, module) in enumerate(communityList):
-        headers = constant.DEFAULT_HEADER
-        headers.update({"Host": constant.WEBSITES_ATTIBUTES[community]['host']})
-        galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
-        entire_corpus = []
-        for j, gallery in enumerate(galleries):
-            urls = module.getGalleryArticleURLs(gallery, article_max=int(constant.ARTICLE_NUMBER / len(constant.WEBSITES_ATTIBUTES[community]["hotGalleries"])))
-            gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
-            corpus = []
-            with tqdm(total=len(urls), desc="Crawling... : " + community + " / " + gallery_name + " =>") as pbar:
-                with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
-                    futures = [ex.submit(threading, url, corpus, module) for url in urls]
-                    for future in as_completed(futures):
-                        result = future.result()
-                        pbar.update(1)
-            preprocessed_corpus = []
-            for i, sentence in tqdm(enumerate(corpus), desc="Sentence Preprocessing..."):
-                preprocessed = sentencePreprocess(sentence, exclude=constant.WEBSITES_ATTIBUTES[community]["exclude"])
-                if preprocessed != "":
-                    preprocessed_corpus.append(preprocessed)
-            entire_corpus.append({"name": community + "/" + gallery_name, "content":preprocessed_corpus})
-        json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--vpn', type=int)
+    args = parser.parse_args()
+    if args.vpn != 0 and args.vpn is not None:
+        vpn.vpn = initialize_vpn(constant.VPN_COUNTRY)  # starts nordvpn and stuff
+        rotate_VPN(vpn.vpn)  # actually connect to server
+        communityList = communityList_VPN
+    else:
+        communityList = communityList_NoVPN
+    try:
+        for i, (community, module) in enumerate(communityList):
+            headers = constant.DEFAULT_HEADER
+            headers.update({"Host": constant.WEBSITES_ATTIBUTES[community]['host']})
+            galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
+            entire_corpus = []
+            for j, gallery_url in enumerate(galleries):
+                gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
+                urls = module.getGalleryArticleURLs(community, gallery_name, gallery_url, 
+                            article_max=int(constant.ARTICLE_NUMBER / len(constant.WEBSITES_ATTIBUTES[community]["hotGalleries"])), vpn=vpn)
+                corpus = []
+                with tqdm(total=len(urls), desc="Crawling " + community + " / " + gallery_name + " =>") as pbar:
+                    with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
+                        futures = [ex.submit(articleRetriever, url, module, pbar, vpn) for url in urls]
+                        for future in as_completed(futures):
+                            corpus.extend(future.result())
+                preprocessed_corpus = []
+                with tqdm(total=len(corpus), desc="Sentence Preprocessing...") as pbar:
+                    with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
+                        futures = [ex.submit(sentencePreprocess, sentence, exclude=constant.WEBSITES_ATTIBUTES[community]["exclude"]) for sentence in corpus]
+                        for future in as_completed(futures):
+                            preprocessed_corpus.append(future.result())
+                            pbar.update(1)
+                entire_corpus.append({"name": community + "/" + gallery_name, "content":preprocessed_corpus})
+            json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
+    finally:
+        if vpn.vpn is not None:
+            close_vpn_connection(vpn.vpn)

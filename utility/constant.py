@@ -1,7 +1,7 @@
 import torch
 
 MAXTHREAD = 4
-
+VPN_COUNTRY = "South Korea"
 DEFAULT_HEADER = {
     'Connection': 'keep-alive',
     'sec-ch-ua': '"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"',
@@ -11,7 +11,7 @@ DEFAULT_HEADER = {
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
 }
-ARTICLE_NUMBER = 10000
+ARTICLE_NUMBER = 100
 WEBSITES_ATTIBUTES = {
     "dcinside" : {
         "prefix": "https://m.dcinside.com/board", 
@@ -32,17 +32,25 @@ WEBSITES_ATTIBUTES = {
             "만화"
         ]
     },
-    # "fmkorea": {
-    #     "prefix": "https://m.fmkorea.com",
-    #     "host" : "m.fmkorea.com",
-    #     "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."],
-    #     "hotGalleries": [
-    #         "https://www.fmkorea.com/humor",
-    #     ],
-    #     "hotGalleries_name": [
-    #         "유머",
-    #     ]
-    # },
+    "fmkorea": {
+        "prefix": "https://m.fmkorea.com",
+        "host" : "m.fmkorea.com",
+        "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."],
+        "hotGalleries": [
+            "https://www.fmkorea.com/humor",
+            "https://www.fmkorea.com/news",
+            "https://www.fmkorea.com/lol",
+            "https://www.fmkorea.com/paint",
+            "https://www.fmkorea.com/fashion"
+        ],
+        "hotGalleries_name": [
+            "유머",
+            "정치/시사",
+            "리그 오브 레전드",
+            "오덕양성소",
+            "패션"
+        ]
+    },
     "pann": {
         "prefix": "https://m.pann.nate.com",
         "host" : "m.pann.nate.com",
