@@ -26,21 +26,15 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
         if response.status_code == 200:
             html = response.text
             soup = BeautifulSoup(html, 'html.parser')
-            if p == 1:
-                gallery_name = soup.find("h1", "ngeb").findChild("a").getText().strip()
-                #print(gallery_name)
-                
             articles = soup.find("ol", "bd_lst")
             for article in articles.findAll('li', 'clear'):
                 if len(article["class"]) != 1 : # 공지, 인기글 제외
                     continue
                 url = article.findChild("a")["href"]
                 urls.append(constant.WEBSITES_ATTIBUTES['fmkorea']['prefix'] + url)
-            #print(urls)
         else: 
-            #print(response.status_code)
             assert response.status_code != 200
-    return urls, gallery_name
+    return urls
 
 def getArticleContent(article_url):
     # response = requests.get(article_url, headers=request_headers_gallery, proxies=proxies, verify=verify)

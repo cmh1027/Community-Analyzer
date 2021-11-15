@@ -4,47 +4,34 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import utility.constant as constant
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-option = webdriver.ChromeOptions()
-option.add_argument('--kiosk-printing')
-option.add_argument('--log-level=3') 
-option.headless = True 
-option.add_argument('--no-sandbox')
-option.add_argument('--disable-dev-shm-usage')
-driver = webdriver.Chrome(chrome_options=option, executable_path='E:\GitHub\Community-Analyzer\crawler\chromedriver.exe') # 이거 로컬환경 맞게 세팅해야함
-
 headers = constant.DEFAULT_HEADER
 headers.update({"Host": constant.WEBSITES_ATTIBUTES['theqoo']['host']})
 
-
-
 def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
     urls = []
-    
-    gallery_cate = gallery_url[19:]
-    # print(gallery_cate)
-    
+    prefix = constant.WEBSITES_ATTIBUTES["theqoo"]["prefix"]
     for p in range(1, page+1):
-        
-        driver.get("https://theqoo.net/index.php?mid=" + gallery_cate+"&filter_mode=normal&page="+str(p))
-        gallery_name = ''
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        articles = soup.find("tbody", "hide_notice").findAll("tr", {'class': None})        
-        
-        for article in articles:
-            url = article.find("a")["href"]
-            urls.append("https://theqoo.net" + url)
-    return urls, gallery_name
+        category = gallery_url[len(prefix)+1:]
+        # response = requests.get("https://theqoo.net/index.php?mid={0}&page={1}".format(category, p), headers=headers, proxies=proxies, verify=verify)
+        response = requests.get("https://theqoo.net/index.php?mid={0}&page={1}".format(category, p), headers=headers)
+        if response.status_code == 200:
+            html = response.text
+            soup = BeautifulSoup(html, 'html.parser')
+            for url in soup.find('ul', 'list').findAll('a'):
+                if "#comment" not in url["href"]:
+                    urls.append(prefix+url["href"])
+        else: 
+            print(response.status_code)
+            assert response.status_code != 200
+    return urls
 
 def getArticleContent(article_url):
-    driver.get(article_url)
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-
-    if soup.find("span", "title") is None: # article has been removed
+    response = requests.get(article_url, headers=headers)
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+    title = soup.find("h3")
+    content = soup.find("div", "read-body")
+    if title is None: # article has been removed
         return "", ""
     else:
-        return soup.find("span", "title").getText(), soup.find("article").getText() # title, content
+        return title.getText(), content.getText() # title, content

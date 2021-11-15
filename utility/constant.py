@@ -8,27 +8,47 @@ DEFAULT_HEADER = {
     'sec-ch-ua-platform': "Windows",
     'User-Agent': 'Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
 }
 
 WEBSITES_ATTIBUTES = {
     "dcinside" : {
-        "prefix": "https://m.dcinside.com/category/hotgall", 
+        "prefix": "https://gall.dcinside.com/board", 
         "host" : "m.dcinside.com",
         "rank" : 5,
         "page" : 10,
-        "exclude" : ["- dc official App"]
+        "exclude" : ["- dc official App"],
+        "hotGalleries": [
+            "https://gall.dcinside.com/board/lists?id=baseball_new10",
+            "https://gall.dcinside.com/board/lists/?id=w_entertainer",
+            "https://gall.dcinside.com/board/lists/?id=leagueoflegends4",
+            "https://gall.dcinside.com/board/lists/?id=football_new7",
+            "https://gall.dcinside.com/board/lists/?id=comic_new3"
+        ],
+        "hotGalleries_name": [
+            "국내야구",
+            "여자 연예인",
+            "리그 오브 레전드",
+            "해외축구",
+            "만화"
+        ]
     },
     "fmkorea": {
-        "prefix": "https://m.fmkorea.com/",
+        "prefix": "https://m.fmkorea.com",
         "host" : "m.fmkorea.com",
         "rank": 6,
         "page": 10,
-        "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."]
+        "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."],
+        "hotGalleries": [
+            "https://www.fmkorea.com/humor",
+        ],
+        "hotGalleries_name": [
+            "유머",
+        ]
     },
     "pann": {
-        "prefix": "https://m.pann.nate.com/",
+        "prefix": "https://m.pann.nate.com",
         "host" : "m.pann.nate.com",
         "mainHeader": {},
         "galleryHeader": {},
@@ -51,7 +71,7 @@ WEBSITES_ATTIBUTES = {
         ]
     },
     "clien": {
-        "prefix": "https://m.clien.net/",
+        "prefix": "https://m.clien.net",
         "host" : "m.clien.net",
         "mainHeader": {},
         "galleryHeader": {},
@@ -66,7 +86,7 @@ WEBSITES_ATTIBUTES = {
         ]
     },
     "ruliweb": {
-        "prefix": "https://m.ruliweb.com/",
+        "prefix": "https://m.ruliweb.com",
         "host" : "m.ruliweb.com",
         "rank": 5,
         "page": 10,
@@ -87,7 +107,7 @@ WEBSITES_ATTIBUTES = {
         ]
     },
     "theqoo": {
-        "prefix": "https://theqoo.net/",
+        "prefix": "https://theqoo.net",
         "host" : "theqoo.net",
         "rank": 5,
         "page": 1,

@@ -22,7 +22,6 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
     
     for p in range(1, page+1):
         response = requests.get(gallery_url+"?page="+str(p), headers=headers)
-        gallery_name = ''
         if response.status_code == 200:
             html = response.text
             soup = BeautifulSoup(html, 'html.parser')
@@ -34,17 +33,13 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
                 div.decompose() # best글 제외 
             for div in soup.find_all("tr", {'class':'table_body list_inner'}): 
                 div.decompose() # 광고글 제외
-            
-            
-            
             for article in articles.findAll('a', 'subject_link deco'):
                 url = article["href"]
-                urls.append(url)
-                        
+                urls.append(url)       
         else: 
             print(response.status_code)
             assert response.status_code != 200
-    return urls, gallery_name
+    return urls
 
 def getArticleContent(article_url):
     # response = requests.get(article_url, headers=request_headers_gallery, proxies=proxies, verify=verify)
