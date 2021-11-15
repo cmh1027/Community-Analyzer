@@ -89,7 +89,9 @@ if __name__ == "__main__":
                     with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
                         futures = [ex.submit(sentencePreprocess, sentence, exclude=constant.WEBSITES_ATTIBUTES[community]["exclude"]) for sentence in corpus]
                         for future in as_completed(futures):
-                            preprocessed_corpus.append(future.result())
+                            result = future.result()
+                            if result != "":
+                                preprocessed_corpus.append()
                             pbar.update(1)
                 entire_corpus.append({"name": community + "/" + gallery_name, "content":preprocessed_corpus})
             json.dump(entire_corpus, open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data/" + community + ".json"), 'w' ))
