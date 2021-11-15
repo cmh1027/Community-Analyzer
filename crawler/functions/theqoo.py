@@ -7,23 +7,30 @@ import utility.constant as constant
 headers = constant.DEFAULT_HEADER
 headers.update({"Host": constant.WEBSITES_ATTIBUTES['theqoo']['host']})
 
-def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
+def getGalleryArticleURLs(gallery_url, article_max=1): # article_max 개의 게시글을 긁어옴
     urls = []
+    page = 1
+    article_num = 0
     prefix = constant.WEBSITES_ATTIBUTES["theqoo"]["prefix"]
-    for p in range(1, page+1):
+    while True:
         category = gallery_url[len(prefix)+1:]
-        # response = requests.get("https://theqoo.net/index.php?mid={0}&page={1}".format(category, p), headers=headers, proxies=proxies, verify=verify)
-        response = requests.get("https://theqoo.net/index.php?mid={0}&page={1}".format(category, p), headers=headers)
+        response = requests.get("https://theqoo.net/index.php?mid={0}&page={1}".format(category, page), headers=headers)
         if response.status_code == 200:
             html = response.text
             soup = BeautifulSoup(html, 'html.parser')
-            for url in soup.find('ul', 'list').findAll('a'):
+            article_list = soup.find('ul', 'list').findAll('a')
+            if len(article_list) == 0:
+                return urls
+            for url in article_list:
                 if "#comment" not in url["href"]:
                     urls.append(prefix+url["href"])
+                    article_num += 1
+                    if article_num >= article_max:
+                        return urls  
         else: 
             print(response.status_code)
             assert response.status_code != 200
-    return urls
+        page += 1
 
 def getArticleContent(article_url):
     response = requests.get(article_url, headers=headers)

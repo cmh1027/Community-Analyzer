@@ -5,7 +5,6 @@ from utility.constant import BertToken
 from tqdm import tqdm
 
 if __name__ == "__main__":
-    # one_hot = []
     articles_noexcess = []
     actual_lengths = []
     website_idxs = []

@@ -1,6 +1,6 @@
+from inspect import trace
 import torch
 from torch import nn, optim
-import torch.nn as nn
 import json, os
 from utility import constant
 from utility.constant import BertToken
@@ -32,10 +32,14 @@ if __name__ == "__main__":
         num_websites = len(articles)
         decoder_layer = nn.TransformerDecoderLayer(d_model=constant.EMBED_SIZE, nhead=1)
         transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
-        input_embed_layer = nn.Embedding(constant.BERT_VOCAB_SIZE, constant.EMBED_SIZE)
+        embedding_layer = nn.Embedding(constant.BERT_VOCAB_SIZE, constant.EMBED_SIZE)
         output_linear_layer = nn.Linear(constant.EMBED_SIZE, constant.BERT_VOCAB_SIZE)
+        torch.nn.init.kaiming_uniform_(decoder_layer.linear1.weight)
+        torch.nn.init.kaiming_uniform_(decoder_layer.linear2.weight)
+        torch.nn.init.kaiming_uniform_(embedding_layer.weight)
+        torch.nn.init.kaiming_uniform_(output_linear_layer.weight)
         optimizer = optim.Adam(list(transformer_decoder.parameters())
-                                + list(input_embed_layer.parameters()) + list(output_linear_layer.parameters()))
+                                + list(embedding_layer.parameters()) + list(output_linear_layer.parameters()))
         loss_weights = torch.ones(constant.BERT_VOCAB_SIZE)
         loss_weights[BertToken.PAD_TOKEN_IND] = 0.0
         losses = []
@@ -53,18 +57,15 @@ if __name__ == "__main__":
             for i, l in enumerate(length):
                 padding_mask[i][l:] = 1
             tgt = inputs
-            tgt = input_embed_layer(tgt)
+            tgt = embedding_layer(tgt)
             tgt = tgt.transpose(0, 1)
             output = transformer_decoder(
                 tgt=tgt, 
                 memory=hidden, 
                 tgt_mask = sequence_mask,
                 tgt_key_padding_mask = padding_mask)
-            output_embed = output_linear_layer(output)
-            output_embed = torch.softmax(output_embed, dim=-1)
-            values, pred = output_embed.max(dim=-1)
-            inputs_embed = input_embed_layer(pred)
-            output = output_linear_layer(inputs_embed)
+            output = output_linear_layer(output)
+            output = torch.softmax(output, dim=-1)
             output = output.view(-1, output.shape[-1])
             label = label.view(-1)
             criterion = nn.CrossEntropyLoss(weight=loss_weights)
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         plt.ylabel('Loss')
         plt.savefig('Loss.png')
         torch.save(transformer_decoder, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
-        torch.save(input_embed_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/input_embed_layer"))
+        torch.save(embedding_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
         torch.save(output_linear_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
     else:
         if args.words is None:
@@ -102,11 +103,11 @@ if __name__ == "__main__":
         length = len(inputs)
         hidden = hidden_vector[int(args.website)].unsqueeze(0).unsqueeze(1)
         transformer_decoder = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
-        input_embed_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/input_embed_layer"))
+        embedding_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
         output_linear_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
         while length < constant.SENTENCE_MAXLEN:
             tgt = inputs
-            tgt = input_embed_layer(tgt)
+            tgt = embedding_layer(tgt)
             tgt = tgt.unsqueeze(0)
             tgt = tgt.transpose(0, 1)
             output = transformer_decoder(

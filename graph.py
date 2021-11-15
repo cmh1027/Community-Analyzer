@@ -3,16 +3,19 @@ import torch
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-import matplotlib as mpl
+from utility import constant
  
-feature = torch.load('model/d2v_merged.model.w2v_format').numpy()
+hidden_vector = torch.load('model/d2v.w2v_format').numpy()
+n, p, d = hidden_vector.shape
+hidden_vector = (hidden_vector.view(n, -1) * constant.WEIGHT[:, None]).view(n, p, d)
+hidden_vector = torch.cat(hidden_vector.split(1)[:], dim=-1).squeeze()
 websites = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/idx2name.json"), 'r'))
 scaler = StandardScaler()    
-scaler.fit(feature)
-feature = scaler.transform(feature)
+scaler.fit(hidden_vector)
+hidden_vector = scaler.transform(hidden_vector)
 pca = PCA(n_components=2)
-pca.fit(feature)
-reduced = pca.transform(feature)
+pca.fit(hidden_vector)
+reduced = pca.transform(hidden_vector)
 plt.rcParams["font.family"] = 'HYGothic-Medium'
 plt.scatter(reduced[:, 0], reduced[:, 1])
 plt.rc('axes', unicode_minus=False)

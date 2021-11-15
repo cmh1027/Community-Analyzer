@@ -17,15 +17,15 @@ headers.update({"Host": constant.WEBSITES_ATTIBUTES['ruliweb']['host']})
 #         urls.append(res[i]["href"])
 #     return urls
 
-def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
+def getGalleryArticleURLs(gallery_url, article_max=1): # article_max 개의 게시글을 긁어옴
     urls = []
-    
-    for p in range(1, page+1):
-        response = requests.get(gallery_url+"?page="+str(p), headers=headers)
+    page = 1
+    article_num = 0
+    while True:
+        response = requests.get(gallery_url+"?page="+str(page), headers=headers)
         if response.status_code == 200:
             html = response.text
             soup = BeautifulSoup(html, 'html.parser')
-            
             articles = soup.find("tbody")
             for div in soup.find_all("tr", {'class':'table_body notice inside screen_out'}): 
                 div.decompose() # 공지글 제외
@@ -33,13 +33,19 @@ def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
                 div.decompose() # best글 제외 
             for div in soup.find_all("tr", {'class':'table_body list_inner'}): 
                 div.decompose() # 광고글 제외
-            for article in articles.findAll('a', 'subject_link deco'):
+            article_list = articles.findAll('a', 'subject_link deco')
+            if len(article_list) == 0:
+                return urls
+            for article in article_list:
                 url = article["href"]
-                urls.append(url)       
+                urls.append(url)     
+                article_num += 1
+                if article_num >= article_max:
+                    return urls  
         else: 
             print(response.status_code)
             assert response.status_code != 200
-    return urls
+        page += 1
 
 def getArticleContent(article_url):
     # response = requests.get(article_url, headers=request_headers_gallery, proxies=proxies, verify=verify)

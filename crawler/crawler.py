@@ -1,5 +1,3 @@
-import requests
-from bs4 import BeautifulSoup
 import json
 import sys, os
 from tqdm import tqdm
@@ -7,13 +5,12 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from utility.preprocess import sentencePreprocess
 import utility.constant as constant
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from functions import dcinside, pann, ruliweb, theqoo, fmkorea, clien
-from konlpy.tag import Okt 
+from functions import dcinside, pann, ruliweb, theqoo, clien #, fmkorea
 ############### For fiddler analysis ###############
 # proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
 # verify = "FiddlerRoot.pem"
 ####################################################
-communityList = [('theqoo', theqoo)]
+communityList = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('clien', clien), ('theqoo', theqoo)]
 # communityList = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('clien', clien), ('theqoo', theqoo), ('fmkorea', fmkorea)]
 
 def threading(url, corpus, module):
@@ -22,15 +19,13 @@ def threading(url, corpus, module):
     corpus.append(content)
 
 if __name__ == "__main__":
-    if constant.SENTENCE_NORMARLIZE is True:
-        okt = Okt()
     for i, (community, module) in enumerate(communityList):
         headers = constant.DEFAULT_HEADER
         headers.update({"Host": constant.WEBSITES_ATTIBUTES[community]['host']})
         galleries = constant.WEBSITES_ATTIBUTES[community]["hotGalleries"]
         entire_corpus = []
         for j, gallery in enumerate(galleries):
-            urls = module.getGalleryArticleURLs(gallery, page=constant.WEBSITES_ATTIBUTES[community]["page"])
+            urls = module.getGalleryArticleURLs(gallery, article_max=int(constant.ARTICLE_NUMBER / len(constant.WEBSITES_ATTIBUTES[community]["hotGalleries"])))
             gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
             corpus = []
             with tqdm(total=len(urls), desc="Crawling... : " + community + " / " + gallery_name + " =>") as pbar:
@@ -42,8 +37,6 @@ if __name__ == "__main__":
             preprocessed_corpus = []
             for i, sentence in tqdm(enumerate(corpus), desc="Sentence Preprocessing..."):
                 preprocessed = sentencePreprocess(sentence, exclude=constant.WEBSITES_ATTIBUTES[community]["exclude"])
-                if constant.SENTENCE_NORMARLIZE is True:
-                    preprocessed = okt.normalize(preprocessed)
                 if preprocessed != "":
                     preprocessed_corpus.append(preprocessed)
             entire_corpus.append({"name": community + "/" + gallery_name, "content":preprocessed_corpus})

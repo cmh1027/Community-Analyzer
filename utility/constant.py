@@ -11,20 +11,18 @@ DEFAULT_HEADER = {
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
 }
-
+ARTICLE_NUMBER = 10000
 WEBSITES_ATTIBUTES = {
     "dcinside" : {
-        "prefix": "https://gall.dcinside.com/board", 
+        "prefix": "https://m.dcinside.com/board", 
         "host" : "m.dcinside.com",
-        "rank" : 5,
-        "page" : 10,
         "exclude" : ["- dc official App"],
         "hotGalleries": [
-            "https://gall.dcinside.com/board/lists?id=baseball_new10",
-            "https://gall.dcinside.com/board/lists/?id=w_entertainer",
-            "https://gall.dcinside.com/board/lists/?id=leagueoflegends4",
-            "https://gall.dcinside.com/board/lists/?id=football_new7",
-            "https://gall.dcinside.com/board/lists/?id=comic_new3"
+            "https://m.dcinside.com/board/baseball_new10",
+            "https://m.dcinside.com/board/w_entertainer",
+            "https://m.dcinside.com/board/leagueoflegends4",
+            "https://m.dcinside.com/board/football_new7",
+            "https://m.dcinside.com/board/comic_new3"
         ],
         "hotGalleries_name": [
             "국내야구",
@@ -34,26 +32,22 @@ WEBSITES_ATTIBUTES = {
             "만화"
         ]
     },
-    "fmkorea": {
-        "prefix": "https://m.fmkorea.com",
-        "host" : "m.fmkorea.com",
-        "rank": 6,
-        "page": 10,
-        "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."],
-        "hotGalleries": [
-            "https://www.fmkorea.com/humor",
-        ],
-        "hotGalleries_name": [
-            "유머",
-        ]
-    },
+    # "fmkorea": {
+    #     "prefix": "https://m.fmkorea.com",
+    #     "host" : "m.fmkorea.com",
+    #     "exclude" : ["Video 태그를 지원하지 않는 브라우저입니다."],
+    #     "hotGalleries": [
+    #         "https://www.fmkorea.com/humor",
+    #     ],
+    #     "hotGalleries_name": [
+    #         "유머",
+    #     ]
+    # },
     "pann": {
         "prefix": "https://m.pann.nate.com",
         "host" : "m.pann.nate.com",
         "mainHeader": {},
         "galleryHeader": {},
-        "rank": 5,
-        "page": 10,
         "exclude" : [],
         "hotGalleries": [
             "https://m.pann.nate.com/talk/c20001?order=N",
@@ -75,8 +69,6 @@ WEBSITES_ATTIBUTES = {
         "host" : "m.clien.net",
         "mainHeader": {},
         "galleryHeader": {},
-        "rank": 1,
-        "page": 50,
         "exclude" : [],
         "hotGalleries": [
             "https://m.clien.net/service/group/clien_all",
@@ -88,8 +80,6 @@ WEBSITES_ATTIBUTES = {
     "ruliweb": {
         "prefix": "https://m.ruliweb.com",
         "host" : "m.ruliweb.com",
-        "rank": 5,
-        "page": 10,
         "exclude" : [],
         "hotGalleries": [
             "https://m.ruliweb.com/community/board/300148",
@@ -109,8 +99,6 @@ WEBSITES_ATTIBUTES = {
     "theqoo": {
         "prefix": "https://theqoo.net",
         "host" : "theqoo.net",
-        "rank": 5,
-        "page": 1,
         "exclude" : [],
         "hotGalleries": [
             "https://theqoo.net/square",
@@ -133,7 +121,7 @@ FORMATS = ["bert", "okt_adjv", "okt_noun"]
 WEIGHT = torch.tensor([1.0, 1.0, 1.0])
 DOCVEC_SIZE = 200
 EMBED_SIZE = DOCVEC_SIZE*len(FORMATS)
-BATCH_SIZE = 100
+BATCH_SIZE = 1000
 DOC2VEC_EPOCH = 1000
 DECODER_EPOCH = 1000
 SENTENCE_MAXLEN = 50

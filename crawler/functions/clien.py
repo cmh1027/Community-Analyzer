@@ -17,37 +17,35 @@ headers.update({"Host": constant.WEBSITES_ATTIBUTES['clien']['host']})
 #         urls.append(res[i]["href"])
 #     return urls
 
-def getGalleryArticleURLs(gallery_url, page=1): # 1~page까지 긁어옴
+def getGalleryArticleURLs(gallery_url, article_max=1): # article_max 개의 게시글을 긁어옴
     urls = []
-    
-    for p in range(0, page):
-        response = requests.get(gallery_url+"?od=T31&category=0&po="+str(p), headers=headers)
-        
-        gallery_name = ''
+    page = 1
+    article_num = 0
+    while True:
+        response = requests.get(gallery_url+"?od=T31&category=0&po="+str(page), headers=headers)
         if response.status_code == 200:
             html = response.text
             soup = BeautifulSoup(html, 'html.parser')
-            
             articles = soup.findAll("a", "list_subject")
+            if len(articles) == 0:
+                return urls
             for i, article in enumerate(articles):
                 if i == 0 : 
                     continue
                 url = article["href"]
                 urls.append("https://m.clien.net" + url)
+                article_num += 1
+                if article_num >= article_max:
+                    return urls
         else: 
             print(response.status_code)
             assert response.status_code != 200
-    return urls, gallery_name
+        page += 1
 
 def getArticleContent(article_url):
-    # response = requests.get(article_url, headers=request_headers_gallery, proxies=proxies, verify=verify)
     response = requests.get(article_url, headers=headers)
-    # print(response)
     html = response.text
     soup = BeautifulSoup(html, 'html.parser')
-    # print(soup)
-    # print(article_url)
-    # print(soup.find("div", "post_title").find("span").getText())
     if soup.find("div", "post_title") is None: # article has been removed
         return "", ""
     else:
