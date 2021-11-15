@@ -19,6 +19,8 @@ def sentencesBertTokenize(sentences, tokenizer, vocab, name=""):
     sentences_tokenized = []
     sentences_tokenized_ind = []
     for sentence in tqdm(sentences, desc=name+" BERT-tokenizing..."):
+        if sentence == "":
+            continue
         tokens = tokenizer(sentence)
         sentences_tokenized.append(tokens)
         sentences_tokenized_ind.append(list(map(lambda s: vocab[s], tokens)))
@@ -27,6 +29,8 @@ def sentencesBertTokenize(sentences, tokenizer, vocab, name=""):
 def sentencesOktTokenize(sentences, tokenizer, name=""):
     sentences_tokenized = []
     for sentence in tqdm(sentences, desc=name+" Okt-tokenizing..."):
+        if sentence == "":
+            continue
         tokens = tokenizer.pos(sentence, join=True, norm=True)
         sentences_tokenized.append(tokens)
     return sentences_tokenized

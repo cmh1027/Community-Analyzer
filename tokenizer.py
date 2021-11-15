@@ -12,8 +12,9 @@ if __name__ == "__main__":
     bertmodel, vocab = get_pytorch_kobert_model()
     tokenizer = get_tokenizer()
     tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
-    okt = Okt()
-    for website in constant.WEBSITES_ATTIBUTES.keys():
+    websites = constant.WEBSITES_ATTIBUTES.keys()
+    for website in websites:
+        okt = Okt()
         data = json.load(open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/" + website + ".json"), 'r'))
         data_bert_processed = []
         data_bert_processed_ind = []
@@ -22,20 +23,30 @@ if __name__ == "__main__":
         ############### Tokenize ###############
         for board in data:
             sentences = board["content"]
+            sentences_splited = []
             content = []
-            if constant.SENTENCE_NORMARLIZE is True:
-                for sentence in tqdm(sentences, desc=board["name"] + " normalizing..."):
-                    content.append(okt.normalize(sentence))
-            else:
-                content = sentences
+            for sentence in tqdm(sentences, desc=board["name"] + " normalizing..."):
+                if len(sentence) == 0 or len(sentence) > constant.SENTENCE_MAXLEN:
+                    continue 
+                content.append(okt.normalize(sentence))
             bert_tokenized, bert_tokenized_ind = sentencesBertTokenize(content, tok, vocab, name=board["name"])
             okt_tokenized = sentencesOktTokenize(content, okt, name=board["name"])
             okt_noun_tokenized = pickOnlyNouns(okt_tokenized)
             okt_adjv_tokenized = pickOnlyAdjsVerb(okt_tokenized)
-            data_bert_processed.append({"name":board["name"], "content":bert_tokenized})
-            data_bert_processed_ind.append(({"name":board["name"], "content":bert_tokenized_ind}))
-            data_okt_noun_processed.append({"name":board["name"], "content":okt_noun_tokenized})
-            data_okt_adjv_processed.append({"name":board["name"], "content":okt_adjv_tokenized})
+            bert_tokenized_dict = {"name":board["name"], "content":bert_tokenized}
+            bert_tokenized_ind_dict = {"name":board["name"], "content":bert_tokenized_ind}
+            okt_noun_tokenized_dict = {"name":board["name"], "content":okt_noun_tokenized}
+            okt_adjv_tokenized_dict = {"name":board["name"], "content":okt_adjv_tokenized}
+            data_bert_processed.append(bert_tokenized_dict)
+            data_bert_processed_ind.append(bert_tokenized_ind_dict)
+            data_okt_noun_processed.append(okt_noun_tokenized_dict)
+            data_okt_adjv_processed.append(okt_adjv_tokenized_dict)
+            if not os.path.exists("data/{0}".format(website)):
+                os.makedirs("data/{0}".format(website))
+            json.dump(bert_tokenized_dict, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/{0}/bert_tokenized.json".format(website)), 'w'))
+            json.dump(bert_tokenized_ind_dict, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/{0}/bert_tokenized_ind.json".format(website)), 'w'))
+            json.dump(okt_noun_tokenized_dict, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/{0}/okt_noun_tokenized.json".format(website)), 'w'))
+            json.dump(okt_adjv_tokenized_dict, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/{0}/okt_adjv_tokenized.json".format(website)), 'w'))
         ########################################
     json.dump(data_bert_processed, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/bert_tokenized.json"), 'w'))
     json.dump(data_bert_processed_ind, open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/bert_tokenized_ind.json"), 'w'))

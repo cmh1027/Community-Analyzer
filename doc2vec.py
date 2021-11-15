@@ -5,6 +5,7 @@ import json, os
 import torch
 from utility import constant
 from tqdm import trange
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     for format in constant.FORMATS:
@@ -23,13 +24,13 @@ if __name__ == "__main__":
         model = Doc2Vec(vector_size=constant.DOCVEC_SIZE, alpha=0.025, min_alpha=0.00025, min_count=1, dm=1, workers=4)
         vocab = tagged_data
         model.build_vocab(tagged_data)
-
         for epoch in trange(constant.DOC2VEC_EPOCH, desc=format+" Doc2vec training..."):
             model.train(tagged_data, total_examples=model.corpus_count, epochs=model.epochs)
             # decrease the learning rate
             model.alpha -= 0.0002
             # fix the learning rate, no decay
             model.min_alpha = model.alpha
+            model.compute_loss
         modelfile = "./model/d2v_" + format + ".model"
         word2vec_file = modelfile + ".w2v_format"
         model.save(modelfile)

@@ -9,12 +9,15 @@ import threading
 import argparse
 from nordvpn_connect import initialize_vpn, rotate_VPN, close_vpn_connection
 from functions import dcinside, pann, ruliweb, theqoo, clien, fmkorea
+import requests
+import time
 ############### For fiddler analysis ###############
 # proxies = {"http": "http://127.0.0.1:8888", "https":"http:127.0.0.1:8888"}
 # verify = "FiddlerRoot.pem"
 ####################################################
 communityList_VPN = [('clien', clien)]
-# communityList_VPN = [('fmkorea', fmkorea)]
+# communityList_VPN = [('clien', clien), ('fmkorea', fmkorea)]
+communityList_VPN_strict = ['fmkorea']
 communityList_NoVPN = [('dcinside', dcinside), ('pann', pann), ('ruliweb', ruliweb), ('theqoo', theqoo)]
 
 class VPNWrapper:
@@ -24,14 +27,20 @@ vpnLock = threading.Lock()
 waiting = False
 vpn = VPNWrapper()
 
-def articleRetriever(url, module, pbar, vpn):
+def articleRetriever(url, module, pbar, headers, vpn):
     def corpus_append(url):
-        title, content = module.getArticleContent(url)
+        title, content = module.getArticleContent(url, headers)
         pbar.update(1)
-        return [title, content]      
+        result = []
+        if title != "":
+            result.append(title)
+        if content != "":
+            result.append(content)
+        return result     
     try:
         return corpus_append(url)
-    except ConnectionAbortedError:
+    except (ConnectionAbortedError, requests.exceptions.ConnectionError):
+        global waiting
         if vpnLock.acquire(blocking=False) is True:
             waiting = True
             print("\r", end="")
@@ -44,7 +53,7 @@ def articleRetriever(url, module, pbar, vpn):
         else:
             while waiting is True:
                 pass
-        return articleRetriever(url, module, pbar, vpn)
+        return articleRetriever(url, module, pbar, headers, vpn)
 
 
 if __name__ == "__main__":
@@ -66,13 +75,15 @@ if __name__ == "__main__":
             for j, gallery_url in enumerate(galleries):
                 gallery_name = constant.WEBSITES_ATTIBUTES[community]["hotGalleries_name"][j]
                 urls = module.getGalleryArticleURLs(community, gallery_name, gallery_url, 
-                            article_max=int(constant.ARTICLE_NUMBER / len(constant.WEBSITES_ATTIBUTES[community]["hotGalleries"])), vpn=vpn)
+                            int(constant.ARTICLE_NUMBER / len(constant.WEBSITES_ATTIBUTES[community]["hotGalleries"])), headers, vpn)
                 corpus = []
                 with tqdm(total=len(urls), desc="Crawling " + community + " / " + gallery_name + " =>") as pbar:
                     with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
-                        futures = [ex.submit(articleRetriever, url, module, pbar, vpn) for url in urls]
+                        futures = [ex.submit(articleRetriever, url, module, pbar, headers, vpn) for url in urls]
                         for future in as_completed(futures):
                             corpus.extend(future.result())
+                            if community in communityList_VPN_strict:
+                                time.sleep(1)
                 preprocessed_corpus = []
                 with tqdm(total=len(corpus), desc="Sentence Preprocessing...") as pbar:
                     with ThreadPoolExecutor(max_workers=constant.MAXTHREAD) as ex:
