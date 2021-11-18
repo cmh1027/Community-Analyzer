@@ -1,4 +1,3 @@
-from inspect import trace
 import torch
 from torch import nn, optim
 import json, os
@@ -51,7 +50,7 @@ if __name__ == "__main__":
         loss_weights = torch.ones(constant.BERT_VOCAB_SIZE, device=device)
         loss_weights[BertToken.PAD_TOKEN_IND] = 0.0
         losses = []
-        for epoch in trange(constant.DECODER_EPOCH, desc="training..."):
+        for epoch in trange(constant.DECODER_EPOCH, desc="Training..."):
             # (len, batch, embed_size)
             batchidx = torch.randint(len(articles), (constant.BATCH_SIZE,))
             length = actual_lengths[batchidx]
@@ -74,20 +73,20 @@ if __name__ == "__main__":
                 tgt_key_padding_mask = padding_mask)
             output = output_linear_layer(output)
             output = torch.softmax(output, dim=-1)
-            output = output.view(-1, output.shape[-1])
+            output = output.transpose(0, 1)
+            output = output.reshape(-1, output.shape[-1])
             label = label.view(-1)
             criterion = nn.CrossEntropyLoss(weight=loss_weights)
             loss = criterion(output, label)
             losses.append(loss.item())
-            # if epoch % 1 == 0:
-            #     print("Loss : %.3f", loss.item())
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        plt.plot(range(len(losses)), losses)
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.savefig('Loss.png')
+            if epoch % 50 == 0 and epoch > 0:
+                plt.plot(range(len(losses)), losses)
+                plt.xlabel('Epoch')
+                plt.ylabel('Loss')
+                plt.savefig('Loss.png')
         torch.save(transformer_decoder, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
         torch.save(embedding_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
         torch.save(output_linear_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
@@ -110,9 +109,9 @@ if __name__ == "__main__":
         inputs = torch.tensor(list(map(lambda s: vocab[s], tokens)))
         length = len(inputs)
         hidden = hidden_vector[int(args.website)].unsqueeze(0).unsqueeze(1)
-        transformer_decoder = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
-        embedding_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
-        output_linear_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
+        transformer_decoder = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"), map_location=device)
+        embedding_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"), map_location=device)
+        output_linear_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"), map_location=device)
         while length < constant.SENTENCE_MAXLEN:
             tgt = inputs
             tgt = embedding_layer(tgt)

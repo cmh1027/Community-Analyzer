@@ -146,4 +146,4 @@ class BertToken:
     END_TOKEN = "[END]"
     UNK_TOKEN_IND = 0
     PAD_TOKEN_IND = 1
-    END_TOKEN_IND = 2
+    END_TOKEN_IND = 3
