@@ -58,6 +58,7 @@ if __name__ == "__main__":
             inputs = articles[batchidx]
             label = torch.cat((inputs[:, 1:], torch.tensor([BertToken.PAD_TOKEN_IND]*constant.BATCH_SIZE, device=device).view(-1, 1)), dim=1)
             label[torch.arange(len(label)), length-1] = BertToken.END_TOKEN_IND
+            label = label.transpose(0, 1)
             b, s = inputs.shape
             sequence_mask = (torch.triu(torch.full((s, s), float('-inf')), diagonal=1).to(device=device))
             padding_mask = torch.zeros(b, s, dtype=bool, device=device)
@@ -73,9 +74,8 @@ if __name__ == "__main__":
                 tgt_key_padding_mask = padding_mask)
             output = output_linear_layer(output)
             output = torch.softmax(output, dim=-1)
-            output = output.transpose(0, 1)
             output = output.reshape(-1, output.shape[-1])
-            label = label.view(-1)
+            label = label.reshape(-1)
             criterion = nn.CrossEntropyLoss(weight=loss_weights)
             loss = criterion(output, label)
             losses.append(loss.item())
