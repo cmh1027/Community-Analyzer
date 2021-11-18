@@ -12,8 +12,14 @@ import gluonnlp as nlp
 import matplotlib.pyplot as plt
 from konlpy.tag import Okt 
 
-def generate_square_subsequent_mask(sz: int):
-    return torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1)
+
+# import torch, gc
+# gc.collect()
+# torch.cuda.empty_cache()
+
+def generate_square_subsequent_mask(sz: int, device: str = "cpu"):
+    mask = (torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1).to(device=device))
+    return mask
 
 
 if __name__ == "__main__":
@@ -22,7 +28,10 @@ if __name__ == "__main__":
     parser.add_argument('--words', type=str)
     parser.add_argument('--website', type=str)
     args = parser.parse_args()
+    if torch.cuda.is_available():
+        print("!!!!!!!!!!!!!!!!!!!!!!!!cuda is available!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    # device = "cpu"
     if args.mode == "train":
         hidden_vector = torch.load('model/d2v.w2v_format').to(device)
         hidden_vector = torch.cat(hidden_vector.split(1)[:], dim=2).squeeze()
@@ -30,17 +39,25 @@ if __name__ == "__main__":
         actual_lengths = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/actual_lengths")).to(device)
         website_idxs = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "data/website_idxs")).to(device)
         num_websites = len(articles)
-        decoder_layer = nn.TransformerDecoderLayer(d_model=constant.EMBED_SIZE, nhead=1)
-        transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6)
-        embedding_layer = nn.Embedding(constant.BERT_VOCAB_SIZE, constant.EMBED_SIZE)
-        output_linear_layer = nn.Linear(constant.EMBED_SIZE, constant.BERT_VOCAB_SIZE)
+        decoder_layer = nn.TransformerDecoderLayer(d_model=constant.EMBED_SIZE, nhead=1).to(device)
+        # decoder_layer = decoder_layer.cuda()
+        
+        transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6).to(device)
+        # transformer_decoder = transformer_decoder.cuda()
+        
+        embedding_layer = nn.Embedding(constant.BERT_VOCAB_SIZE, constant.EMBED_SIZE).to(device)
+        # embedding_layer = embedding_layer.cuda()
+        
+        output_linear_layer = nn.Linear(constant.EMBED_SIZE, constant.BERT_VOCAB_SIZE).to(device)
+        # output_linear_layer = output_linear_layer.cuda()
+        
         torch.nn.init.kaiming_uniform_(decoder_layer.linear1.weight)
         torch.nn.init.kaiming_uniform_(decoder_layer.linear2.weight)
         torch.nn.init.kaiming_uniform_(embedding_layer.weight)
         torch.nn.init.kaiming_uniform_(output_linear_layer.weight)
         optimizer = optim.Adam(list(transformer_decoder.parameters())
                                 + list(embedding_layer.parameters()) + list(output_linear_layer.parameters()))
-        loss_weights = torch.ones(constant.BERT_VOCAB_SIZE)
+        loss_weights = torch.ones(constant.BERT_VOCAB_SIZE, device=device)
         loss_weights[BertToken.PAD_TOKEN_IND] = 0.0
         losses = []
         for epoch in trange(constant.DECODER_EPOCH, desc="training..."):
@@ -49,11 +66,11 @@ if __name__ == "__main__":
             length = actual_lengths[batchidx]
             hidden = hidden_vector[website_idxs[batchidx]].unsqueeze(0)
             inputs = articles[batchidx]
-            label = torch.cat((inputs[:, 1:], torch.tensor([BertToken.PAD_TOKEN_IND]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
+            label = torch.cat((inputs[:, 1:], torch.tensor([BertToken.PAD_TOKEN_IND]*constant.BATCH_SIZE, device=device).view(-1, 1)), dim=1)
             label[torch.arange(len(label)), length-1] = BertToken.END_TOKEN_IND
             b, s = inputs.shape
-            sequence_mask = generate_square_subsequent_mask(s)
-            padding_mask = torch.zeros(b, s)
+            sequence_mask = generate_square_subsequent_mask(s, device=device)
+            padding_mask = torch.zeros(b, s, dtype=bool, device=device)
             for i, l in enumerate(length):
                 padding_mask[i][l:] = 1
             tgt = inputs
