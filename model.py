@@ -13,20 +13,13 @@ import matplotlib.pyplot as plt
 from konlpy.tag import Okt 
 
 
-# import torch, gc
-# gc.collect()
-# torch.cuda.empty_cache()
-
-def generate_square_subsequent_mask(sz: int, device: str = "cpu"):
-    mask = (torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1).to(device=device))
-    return mask
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('mode', type=str)
     parser.add_argument('--words', type=str)
     parser.add_argument('--website', type=str)
+    parser.add_argument('--loadmodel', type=int)
     args = parser.parse_args()
     if torch.cuda.is_available():
         print("!!!!!!!!!!!!!!!!!!!!!!!!cuda is available!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -41,20 +34,18 @@ if __name__ == "__main__":
         num_websites = len(articles)
         decoder_layer = nn.TransformerDecoderLayer(d_model=constant.EMBED_SIZE, nhead=1).to(device)
         # decoder_layer = decoder_layer.cuda()
-        
-        transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6).to(device)
-        # transformer_decoder = transformer_decoder.cuda()
-        
-        embedding_layer = nn.Embedding(constant.BERT_VOCAB_SIZE, constant.EMBED_SIZE).to(device)
-        # embedding_layer = embedding_layer.cuda()
-        
-        output_linear_layer = nn.Linear(constant.EMBED_SIZE, constant.BERT_VOCAB_SIZE).to(device)
-        # output_linear_layer = output_linear_layer.cuda()
-        
-        torch.nn.init.kaiming_uniform_(decoder_layer.linear1.weight)
-        torch.nn.init.kaiming_uniform_(decoder_layer.linear2.weight)
-        torch.nn.init.kaiming_uniform_(embedding_layer.weight)
-        torch.nn.init.kaiming_uniform_(output_linear_layer.weight)
+        if args.loadmodel is None or args.loadmodel == 0: 
+            transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=6).to(device)
+            embedding_layer = nn.Embedding(constant.BERT_VOCAB_SIZE, constant.EMBED_SIZE).to(device)
+            output_linear_layer = nn.Linear(constant.EMBED_SIZE, constant.BERT_VOCAB_SIZE).to(device)
+            torch.nn.init.kaiming_uniform_(decoder_layer.linear1.weight)
+            torch.nn.init.kaiming_uniform_(decoder_layer.linear2.weight)
+            torch.nn.init.kaiming_uniform_(embedding_layer.weight)
+            torch.nn.init.kaiming_uniform_(output_linear_layer.weight)
+        else:
+            transformer_decoder = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
+            embedding_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
+            output_linear_layer = torch.load(os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
         optimizer = optim.Adam(list(transformer_decoder.parameters())
                                 + list(embedding_layer.parameters()) + list(output_linear_layer.parameters()))
         loss_weights = torch.ones(constant.BERT_VOCAB_SIZE, device=device)
@@ -69,7 +60,7 @@ if __name__ == "__main__":
             label = torch.cat((inputs[:, 1:], torch.tensor([BertToken.PAD_TOKEN_IND]*constant.BATCH_SIZE, device=device).view(-1, 1)), dim=1)
             label[torch.arange(len(label)), length-1] = BertToken.END_TOKEN_IND
             b, s = inputs.shape
-            sequence_mask = generate_square_subsequent_mask(s, device=device)
+            sequence_mask = (torch.triu(torch.full((s, s), float('-inf')), diagonal=1).to(device=device))
             padding_mask = torch.zeros(b, s, dtype=bool, device=device)
             for i, l in enumerate(length):
                 padding_mask[i][l:] = 1
