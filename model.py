@@ -52,7 +52,7 @@ if __name__ == "__main__":
             label = torch.cat((inputs[:, 1:], torch.tensor([BertToken.PAD_TOKEN_IND]*constant.BATCH_SIZE).view(-1, 1)), dim=1)
             label[torch.arange(len(label)), length-1] = BertToken.END_TOKEN_IND
             b, s = inputs.shape
-            sequence_mask = generate_square_subsequent_mask(constant.SENTENCE_MAXLEN)
+            sequence_mask = generate_square_subsequent_mask(s)
             padding_mask = torch.zeros(b, s)
             for i, l in enumerate(length):
                 padding_mask[i][l:] = 1

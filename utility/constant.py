@@ -128,10 +128,10 @@ WEBSITES_ATTIBUTES = {
 }
 BERT_VOCAB_SIZE = 8002
 FORMATS = ["bert", "okt_adjv", "okt_noun"]
-WEIGHT = torch.tensor([1.0, 1.0, 1.0])
+WEIGHT = torch.tensor([1.0, 1.0, 1.0]) # Bert, parlance, topic
 DOCVEC_SIZE = 200
 EMBED_SIZE = DOCVEC_SIZE*len(FORMATS)
-BATCH_SIZE = 1000
+BATCH_SIZE = 100
 DOC2VEC_EPOCH = 1000
 DECODER_EPOCH = 2500
 SENTENCE_MAXLEN = 250
