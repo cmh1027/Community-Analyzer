@@ -11,7 +11,8 @@ import gluonnlp as nlp
 import matplotlib.pyplot as plt
 from konlpy.tag import Okt 
 
-
+def generate_square_subsequent_mask(sz: int, device="cpu"):
+    return torch.triu(torch.full((sz, sz), float('-inf')), diagonal=1).to(device)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -60,8 +61,8 @@ if __name__ == "__main__":
             label[torch.arange(len(label)), length-1] = BertToken.END_TOKEN_IND
             label = label.transpose(0, 1)
             b, s = inputs.shape
-            sequence_mask = (torch.triu(torch.full((s, s), float('-inf')), diagonal=1).to(device=device))
-            padding_mask = torch.zeros(b, s, dtype=bool, device=device)
+            sequence_mask = generate_square_subsequent_mask(s, device=device)
+            padding_mask = torch.zeros(b, s, device=device, dtype=bool)
             for i, l in enumerate(length):
                 padding_mask[i][l:] = 1
             tgt = inputs
@@ -72,8 +73,11 @@ if __name__ == "__main__":
                 memory=hidden, 
                 tgt_mask = sequence_mask,
                 tgt_key_padding_mask = padding_mask)
-            output = output_linear_layer(output)
-            output = torch.softmax(output, dim=-1)
+            output_embed = output_linear_layer(output)
+            output_embed = torch.softmax(output_embed, dim=-1)
+            values, pred = output_embed.max(dim=-1)
+            inputs_embed = embedding_layer(pred)
+            output = output_linear_layer(inputs_embed)
             output = output.reshape(-1, output.shape[-1])
             label = label.reshape(-1)
             criterion = nn.CrossEntropyLoss(weight=loss_weights)
@@ -82,11 +86,14 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if epoch % 50 == 0 and epoch > 0:
+            if epoch % 10 == 0 and epoch > 0:
                 plt.plot(range(len(losses)), losses)
                 plt.xlabel('Epoch')
                 plt.ylabel('Loss')
                 plt.savefig('Loss.png')
+        torch.save(transformer_decoder, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
+        torch.save(embedding_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
+        torch.save(output_linear_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
         torch.save(transformer_decoder, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/transformer_decoder"))
         torch.save(embedding_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/embedding_layer"))
         torch.save(output_linear_layer, os.path.join(os.path.abspath(os.path.dirname(__file__)), "model/output_linear_layer"))
